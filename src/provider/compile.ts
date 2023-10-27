@@ -1,7 +1,12 @@
-import WebviewProvider from "./webview";
 import * as vscode from "vscode";
 import * as ejs from "ejs";
 import * as fs from "fs";
+import * as path from "path";
+
+import WebviewProvider from "./webview";
+
+import { exec } from "child_process";
+import { makeABIEnocde } from "../utils";
 
 export default class CompileViewProvider extends WebviewProvider {
   constructor({
@@ -57,6 +62,43 @@ export default class CompileViewProvider extends WebviewProvider {
               solFiles,
             },
           });
+          break;
+        }
+        case "compile": {
+          const { file } = payload;
+          try {
+            exec(`antibug deploy ${file}`, (error, stdout, stderr) => {
+              if (error) {
+                console.error(`exec error: ${error}`);
+                return;
+              }
+              if (stderr) {
+                console.error(`stderr: ${stderr}`);
+              }
+              const directoryPath = stdout.split(":")[1].trim();
+              const jsonFileName = file
+                .split("/")
+                .pop()
+                ?.split(".")[0]
+                .concat(".json");
+              const jsonFilePath = path.join(directoryPath, jsonFileName);
+              const jsonFile = require(jsonFilePath);
+              const { abis, bytecodes, contract } = jsonFile;
+              const newABIs = makeABIEnocde(abis);
+
+              this.view?.webview.postMessage({
+                type: "compileResult",
+                payload: {
+                  abis: newABIs,
+                  bytecodes,
+                  contract,
+                },
+              });
+            });
+          } catch (e) {
+            console.log(e);
+          }
+          break;
         }
       }
     });
