@@ -11,9 +11,19 @@
       <button class="compile__action button--primary">Compile</button>
     </div>
     <div class="compile-info">
-      <button>ABI</button>
-      <butotn>Bytecodes</butotn>
+      <div class="compile-info__abi">
+        <i class="fas fa-code"></i>
+        ABI
+      </div>
+      <div class="compile-info__bytecodes">
+        <i class="far fa-file-code"></i>
+        Bytecodes
+      </div>
     </div>
     <script nonce="<%= nonce %>" src="<%= controllers.index %>"></script>
+    <script
+      nonce="<%= nonce %>"
+      src="https://use.fontawesome.com/releases/v5.2.0/js/all.js"
+    ></script>
   </body>
 </html>
