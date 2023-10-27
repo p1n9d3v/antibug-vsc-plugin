@@ -6,7 +6,7 @@ import * as path from "path";
 import WebviewProvider from "./webview";
 
 import { exec } from "child_process";
-import { makeABIEnocde } from "../utils";
+import { makeABI } from "../util";
 
 export default class CompileAndInteractionViewProvider extends WebviewProvider {
   constructor({
@@ -84,7 +84,7 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
               const jsonFilePath = path.join(directoryPath, jsonFileName);
               const jsonFile = require(jsonFilePath);
               const { abis, bytecodes } = jsonFile;
-              const newABIs = makeABIEnocde(abis);
+              const newABIs = makeABI(abis);
 
               this.view?.webview.postMessage({
                 type: "compileResult",
