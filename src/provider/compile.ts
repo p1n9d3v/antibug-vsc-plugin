@@ -43,11 +43,9 @@ export default class CompileViewProvider extends WebviewProvider {
       "compile.ejs"
     ).fsPath;
 
-    console.log("htmlPath", htmlPath);
-
     const html = fs.readFileSync(htmlPath, "utf-8");
-    console.log("html", html);
     const nonce = this.getNonce();
+
     return ejs.render(
       html,
       {
