@@ -24,7 +24,8 @@
     "views": {
       "antiblock": [
         {
-          "id": "antiblock-compile",
+          "type": "webview",
+          "id": "antiblock.compile",
           "name": "Compile"
         }
       ]

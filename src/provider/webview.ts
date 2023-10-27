@@ -1,9 +1,10 @@
 import * as vscode from "vscode";
 
-export class WebviewProvider implements vscode.WebviewViewProvider {
+export default class WebviewProvider implements vscode.WebviewViewProvider {
+  public view?: vscode.WebviewView;
   public extensionUri: vscode.Uri;
   public viewType: string;
-  public commonFiles: Map<string, string[]> = new Map();
+  public commonFiles: Map<string, string> = new Map();
   constructor({
     extensionUri,
     viewType,
@@ -14,26 +15,31 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     this.extensionUri = extensionUri;
     this.viewType = viewType;
 
-    this.commonFiles.set("style", [
+    this.commonFiles.set(
+      "resetStyle",
       vscode.Uri.joinPath(
         this.extensionUri,
         "src",
         "style",
         "common",
         "reset.css"
-      ).fsPath,
+      ).fsPath
+    );
+    this.commonFiles.set(
+      "globalStyle",
       vscode.Uri.joinPath(
         this.extensionUri,
         "src",
         "style",
         "common",
         "global.css"
-      ).fsPath,
-    ]);
+      ).fsPath
+    );
 
-    this.commonFiles.set("template", [
-      vscode.Uri.joinPath(this.extensionUri, "src", "template").fsPath,
-    ]);
+    this.commonFiles.set(
+      "commonTemplate",
+      vscode.Uri.joinPath(this.extensionUri, "src", "template", "common").fsPath
+    );
   }
 
   public resolveWebviewView(
