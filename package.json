@@ -27,6 +27,11 @@
           "type": "webview",
           "id": "antiblock.compile",
           "name": "Compile"
+        },
+        {
+          "type": "webview",
+          "id": "antiblock.deploy",
+          "name": "Deploy"
         }
       ]
     }
