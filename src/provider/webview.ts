@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-export class WebviewProvider implements vscode.WebviewViewPropvider {
+export class WebviewProvider implements vscode.WebviewViewProvider {
   public extensionUri: vscode.Uri;
   public viewType: string;
   public commonFiles: Map<string, vscode.Uri[]> = new Map();
@@ -34,6 +34,14 @@ export class WebviewProvider implements vscode.WebviewViewPropvider {
     this.commonFiles.set("template", [
       vscode.Uri.joinPath(this.extensionUri, "src", "template"),
     ]);
+  }
+
+  public resolveWebviewView(
+    webviewView: vscode.WebviewView,
+    context: vscode.WebviewViewResolveContext<unknown>,
+    token: vscode.CancellationToken
+  ): void | Thenable<void> {
+    throw new Error("Method not implemented.");
   }
 
   protected getNonce() {
