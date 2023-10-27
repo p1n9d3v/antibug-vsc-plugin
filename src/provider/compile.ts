@@ -49,13 +49,21 @@ export default class CompileViewProvider extends WebviewProvider {
     return ejs.render(
       html,
       {
-        resetStyle: this.commonFiles.get("resetStyle"),
-        globalStyle: this.commonFiles.get("globalStyle"),
+        resetStyle: webview.asWebviewUri(
+          this.commonFiles.get("resetStyle") as vscode.Uri
+        ),
+        globalStyle: webview.asWebviewUri(
+          this.commonFiles.get("globalStyle") as vscode.Uri
+        ),
         cspSource: webview.cspSource,
         nonce,
       },
       {
-        views: [this.commonFiles.get("commonTemplate") ?? ""],
+        views: [
+          webview.asWebviewUri(
+            this.commonFiles.get("commonTemplate") as vscode.Uri
+          ).fsPath,
+        ],
       }
     );
   }

@@ -4,7 +4,7 @@ export default class WebviewProvider implements vscode.WebviewViewProvider {
   public view?: vscode.WebviewView;
   public extensionUri: vscode.Uri;
   public viewType: string;
-  public commonFiles: Map<string, string> = new Map();
+  public commonFiles: Map<string, vscode.Uri> = new Map();
   constructor({
     extensionUri,
     viewType,
@@ -23,7 +23,7 @@ export default class WebviewProvider implements vscode.WebviewViewProvider {
         "style",
         "common",
         "reset.css"
-      ).fsPath
+      )
     );
     this.commonFiles.set(
       "globalStyle",
@@ -33,12 +33,12 @@ export default class WebviewProvider implements vscode.WebviewViewProvider {
         "style",
         "common",
         "global.css"
-      ).fsPath
+      )
     );
 
     this.commonFiles.set(
       "commonTemplate",
-      vscode.Uri.joinPath(this.extensionUri, "src", "template", "common").fsPath
+      vscode.Uri.joinPath(this.extensionUri, "src", "template", "common")
     );
   }
 
