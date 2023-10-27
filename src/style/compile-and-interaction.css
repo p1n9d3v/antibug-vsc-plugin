@@ -1,0 +1,78 @@
+body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.compile {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.compile__compile {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.compile-info {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.compile-info__abi,
+.compile-info__bytecodes {
+  cursor: pointer;
+}
+.compile-info i {
+  font-size: 20px;
+  color: #fff;
+}
+
+.interaction {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.interaction > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.from__select {
+  display: flex;
+}
+
+.from__select select {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.from__copy-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 40px;
+
+  background: #1c64f2;
+  color: #fff;
+  font-size: 18x;
+
+  border-top-right-radius: var(--input-border-radius);
+  border-bottom-right-radius: var(--input-border-radius);
+
+  cursor: pointer;
+}
+.from__copy-button:hover {
+  opacity: 0.8;
+}
+
+.interaction__value div {
+  display: flex;
+  gap: 8px;
+}
+.interaction__value select {
+  width: 120px;
+}

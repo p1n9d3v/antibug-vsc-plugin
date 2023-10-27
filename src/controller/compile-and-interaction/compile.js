@@ -1,15 +1,17 @@
+const vscode = acquireVsCodeApi();
+const oldState = vscode.getState();
 (function () {
-  const vscode = acquireVsCodeApi();
-
   window.onload = () => {
     vscode.postMessage({
       type: "init",
     });
   };
 
-  const compileButton = document.querySelector(".compile button");
+  const compileButton = document.querySelector(".compile__compile button");
   compileButton.addEventListener("click", () => {
-    const selectedSolFile = document.querySelector(".compile__sol-files").value;
+    const selectedSolFile = document.querySelector(
+      ".compile__compile select"
+    ).value;
     vscode.postMessage({
       type: "compile",
       payload: {
@@ -31,7 +33,9 @@
           return option;
         });
 
-        const selectElement = document.querySelector(".compile__sol-files");
+        const selectElement = document.querySelector(
+          ".compile__compile select"
+        );
         selectElement.replaceChildren(...solFileOptions);
         break;
       }
@@ -49,6 +53,15 @@
         bytecodeButton.addEventListener("click", () => {
           navigator.clipboard.writeText(bytecodes);
         });
+
+        const compile = {
+          abis,
+          bytecodes,
+        };
+        vscode.setState({
+          compile,
+        });
+
         break;
       }
     }

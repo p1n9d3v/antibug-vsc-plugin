@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%-include('head.ejs') %>
+    <link href="<%= styles.compile %>" rel="stylesheet" />
+    <title>Document</title>
+  </head>
+  <body>
+    <!-- COMPILE-->
+    <div class="compile">
+      <div class="compile__compile">
+        <select></select>
+        <button class="button--primary">Compile</button>
+      </div>
+      <div class="compile-info">
+        <div class="compile-info__abi">
+          <i class="fas fa-code"></i>
+          ABI
+        </div>
+        <div class="compile-info__bytecodes">
+          <i class="far fa-file-code"></i>
+          Bytecodes
+        </div>
+      </div>
+    </div>
+
+    <!-- DEPLOY -->
+    <div class="interaction">
+      <div class="interaction__chain">
+        <p>Chain</p>
+        <select>
+          <option>MainNet</option>
+        </select>
+      </div>
+      <div class="interaction__from-addr">
+        <p>From Address</p>
+        <div class="from__select">
+          <select></select>
+          <div class="from__copy-button">
+            <i class="fas fa-copy"></i>
+          </div>
+        </div>
+      </div>
+      <div class="interaction__to-addr">
+        <p>To Address</p>
+        <input />
+      </div>
+      <div class="interaction__gas">
+        <p>Gas Limit</p>
+        <input type="number" />
+      </div>
+      <div class="interaction__value">
+        <p>Value</p>
+        <div>
+          <input class="value__amount" type="number" />
+          <select class="value__type">
+            <option>ETH</option>
+            <option>Gwei</option>
+            <option>Wei</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <button class="deploy button--primary">Deploy</button>
+    <script
+      nonce="<%= nonce %>"
+      src="<%= controllers.compile %>"
+      defer
+    ></script>
+    <script
+      nonce="<%= nonce %>"
+      src="<%= controllers.interaction %>"
+      defer
+    ></script>
+
+    <script
+      nonce="<%= nonce %>"
+      src="https://use.fontawesome.com/releases/v5.2.0/js/all.js"
+    ></script>
+  </body>
+</html>

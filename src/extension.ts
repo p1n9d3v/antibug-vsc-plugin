@@ -1,26 +1,16 @@
 import * as vscode from "vscode";
-import CompileViewProvider from "./provider/compile";
-import DeployViewProvider from "./provider/deploy";
+import CompileAndInteractionViewProvider from "./provider/compile-and-interaction";
 
 export function activate(context: vscode.ExtensionContext) {
-  const compileViewProvider = new CompileViewProvider({
+  const compileViewProvider = new CompileAndInteractionViewProvider({
     extensionUri: context.extensionUri,
-    viewType: "compile",
-  });
-
-  const deployViewProvider = new DeployViewProvider({
-    extensionUri: context.extensionUri,
-    viewType: "deploy",
+    viewType: "antiblock.compile-and-interaction",
   });
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
-      "antiblock.compile",
+      "antiblock.compile-and-interaction",
       compileViewProvider
-    ),
-    vscode.window.registerWebviewViewProvider(
-      "antiblock.deploy",
-      deployViewProvider
     )
   );
 }

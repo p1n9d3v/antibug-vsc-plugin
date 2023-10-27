@@ -8,7 +8,7 @@ import WebviewProvider from "./webview";
 import { exec } from "child_process";
 import { makeABIEnocde } from "../utils";
 
-export default class CompileViewProvider extends WebviewProvider {
+export default class CompileAndInteractionViewProvider extends WebviewProvider {
   constructor({
     extensionUri,
     viewType,
@@ -83,7 +83,7 @@ export default class CompileViewProvider extends WebviewProvider {
                 .concat(".json");
               const jsonFilePath = path.join(directoryPath, jsonFileName);
               const jsonFile = require(jsonFilePath);
-              const { abis, bytecodes, contract } = jsonFile;
+              const { abis, bytecodes } = jsonFile;
               const newABIs = makeABIEnocde(abis);
 
               this.view?.webview.postMessage({
@@ -91,7 +91,6 @@ export default class CompileViewProvider extends WebviewProvider {
                 payload: {
                   abis: newABIs,
                   bytecodes,
-                  contract,
                 },
               });
             });
@@ -109,7 +108,7 @@ export default class CompileViewProvider extends WebviewProvider {
       this.extensionUri,
       "src",
       "template",
-      "compile.ejs"
+      "compile-and-interaction.ejs"
     ).fsPath;
 
     const html = fs.readFileSync(htmlPath, "utf-8");
@@ -130,18 +129,27 @@ export default class CompileViewProvider extends WebviewProvider {
               this.extensionUri,
               "src",
               "style",
-              "compile.css"
+              "compile-and-interaction.css"
             )
           ),
         },
         controllers: {
-          index: webview.asWebviewUri(
+          compile: webview.asWebviewUri(
             vscode.Uri.joinPath(
               this.extensionUri,
               "src",
               "controller",
-              "compile",
-              "index.js"
+              "compile-and-interaction",
+              "compile.js"
+            )
+          ),
+          interaction: webview.asWebviewUri(
+            vscode.Uri.joinPath(
+              this.extensionUri,
+              "src",
+              "controller",
+              "compile-and-interaction",
+              "interaction.js"
             )
           ),
         },

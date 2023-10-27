@@ -25,13 +25,8 @@
       "antiblock": [
         {
           "type": "webview",
-          "id": "antiblock.compile",
+          "id": "antiblock.compile-and-interaction",
           "name": "Compile"
-        },
-        {
-          "type": "webview",
-          "id": "antiblock.deploy",
-          "name": "Deploy"
         }
       ]
     }
