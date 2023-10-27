@@ -25,7 +25,7 @@ const oldState = vscode.getState();
 
     switch (type) {
       case "init": {
-        const { solFiles } = payload;
+        const { accounts, solFiles } = payload;
         const solFileOptions = solFiles.map(({ path }) => {
           const option = document.createElement("option");
           option.value = path;
@@ -33,10 +33,25 @@ const oldState = vscode.getState();
           return option;
         });
 
-        const selectElement = document.querySelector(
+        const solFilesSelect = document.querySelector(
           ".compile__compile select"
         );
-        selectElement.replaceChildren(...solFileOptions);
+
+        const fromAddressOptions = accounts.map(
+          ({ address, balance, privateKey }) => {
+            const option = document.createElement("option");
+            option.value = privateKey;
+            option.innerText = `${address}(${balance})`;
+            return option;
+          }
+        );
+
+        solFilesSelect.replaceChildren(...solFileOptions);
+        const fromAddressSelect = document.querySelector(
+          ".from__select select"
+        );
+        fromAddressSelect.replaceChildren(...fromAddressOptions);
+
         break;
       }
 

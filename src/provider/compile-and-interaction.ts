@@ -7,6 +7,8 @@ import WebviewProvider from "./webview";
 
 import { exec } from "child_process";
 import { makeABI } from "../util";
+import { antiBlockNode } from "../blockchain/node";
+import { DEFAULT_ACCOUNTS } from "../util/config";
 
 export default class CompileAndInteractionViewProvider extends WebviewProvider {
   constructor({
@@ -56,9 +58,15 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
             }
           }
 
+          const accounts = DEFAULT_ACCOUNTS.map((account) => ({
+            address: account.address,
+            privateKey: account.privateKey,
+            balance: account.balance.toString(),
+          }));
           this.view?.webview.postMessage({
             type: "init",
             payload: {
+              accounts,
               solFiles,
             },
           });
