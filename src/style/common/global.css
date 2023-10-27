@@ -3,6 +3,10 @@
 * {
   font-family: var(--vscode-font-family);
 }
+
+body {
+  padding: 20px;
+}
 /* Button */
 button {
   width: 100%;
