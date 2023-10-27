@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 export class WebviewProvider implements vscode.WebviewViewProvider {
   public extensionUri: vscode.Uri;
   public viewType: string;
-  public commonFiles: Map<string, vscode.Uri[]> = new Map();
+  public commonFiles: Map<string, string[]> = new Map();
   constructor({
     extensionUri,
     viewType,
@@ -21,18 +21,18 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         "style",
         "common",
         "reset.css"
-      ),
+      ).fsPath,
       vscode.Uri.joinPath(
         this.extensionUri,
         "src",
         "style",
         "common",
         "global.css"
-      ),
+      ).fsPath,
     ]);
 
     this.commonFiles.set("template", [
-      vscode.Uri.joinPath(this.extensionUri, "src", "template"),
+      vscode.Uri.joinPath(this.extensionUri, "src", "template").fsPath,
     ]);
   }
 
