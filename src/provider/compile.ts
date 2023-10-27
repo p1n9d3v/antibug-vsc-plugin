@@ -32,7 +32,34 @@ export default class CompileViewProvider extends WebviewProvider {
     webviewView.webview.html = this.getHtmlForWebview(webviewView.webview);
 
     // handle message
-    webviewView.webview.onDidReceiveMessage((data) => {});
+    webviewView.webview.onDidReceiveMessage(async (data) => {
+      const { type, payload } = data;
+
+      switch (type) {
+        case "init": {
+          const workspaceFolders = vscode.workspace.workspaceFolders;
+          const solFiles: vscode.Uri[] = [];
+          // how to get root folder
+
+          if (workspaceFolders) {
+            for (const folder of workspaceFolders) {
+              const files = await vscode.workspace.findFiles(
+                new vscode.RelativePattern(folder, "**/*.sol"),
+                "**/node_modules/**"
+              );
+              solFiles.push(...files);
+            }
+          }
+
+          this.view?.webview.postMessage({
+            type: "init",
+            payload: {
+              solFiles,
+            },
+          });
+        }
+      }
+    });
   }
 
   public getHtmlForWebview(webview: vscode.Webview): string {
@@ -49,12 +76,33 @@ export default class CompileViewProvider extends WebviewProvider {
     return ejs.render(
       html,
       {
-        resetStyle: webview.asWebviewUri(
-          this.commonFiles.get("resetStyle") as vscode.Uri
-        ),
-        globalStyle: webview.asWebviewUri(
-          this.commonFiles.get("globalStyle") as vscode.Uri
-        ),
+        styles: {
+          reset: webview.asWebviewUri(
+            this.commonFiles.get("resetStyle") as vscode.Uri
+          ),
+          global: webview.asWebviewUri(
+            this.commonFiles.get("globalStyle") as vscode.Uri
+          ),
+          compile: webview.asWebviewUri(
+            vscode.Uri.joinPath(
+              this.extensionUri,
+              "src",
+              "style",
+              "compile.css"
+            )
+          ),
+        },
+        controllers: {
+          index: webview.asWebviewUri(
+            vscode.Uri.joinPath(
+              this.extensionUri,
+              "src",
+              "controller",
+              "compile",
+              "index.js"
+            )
+          ),
+        },
         cspSource: webview.cspSource,
         nonce,
       },

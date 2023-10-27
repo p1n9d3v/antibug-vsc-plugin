@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <%-include('head.ejs') %>
+    <link href="<%= styles.compile %>" rel="stylesheet" />
     <title>Document</title>
   </head>
   <body>
@@ -13,6 +14,6 @@
       <button>ABI</button>
       <butotn>Bytecodes</butotn>
     </div>
-    <script></script>
+    <script nonce="<%= nonce %>" src="<%= controllers.index %>"></script>
   </body>
 </html>
