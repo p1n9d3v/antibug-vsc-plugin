@@ -62,6 +62,8 @@ const oldState = vscode.getState();
           ".compile-info__bytecodes"
         );
 
+        const deployDiv = document.querySelector(".deploy");
+
         abiButton.addEventListener("click", () => {
           navigator.clipboard.writeText(JSON.stringify(abis, null, 2));
         });
