@@ -47,6 +47,7 @@ body {
 .from__select select {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
+  padding-right: 55px;
 }
 
 .from__copy-button {
@@ -75,4 +76,45 @@ body {
 }
 .interaction__value select {
   width: 120px;
+}
+
+.deploy__actions {
+  display: flex;
+}
+.deploy__deploy {
+  background: #1c64f2;
+
+  border-radius: 0;
+  border-top-left-radius: var(--input-border-radius);
+  border-bottom-left-radius: var(--input-border-radius);
+}
+
+.deploy__show-arguments {
+  width: 40px;
+
+  background: #f9fafb;
+  color: #1c64f2;
+
+  border-radius: 0;
+  border-top-right-radius: var(--input-border-radius);
+  border-bottom-right-radius: var(--input-border-radius);
+}
+
+.arguments {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 0;
+}
+.arguments.hidden {
+  display: none;
+}
+.argument {
+  display: flex;
+  justify-content: end;
+  align-items: flex-end;
+  gap: 4px;
+}
+.argument__info {
+  width: 100px;
 }

@@ -30,6 +30,12 @@ button:hover {
 button.button--primary {
   background: #1c64f2;
 }
+button.button--secondary {
+  background: #d1850b;
+}
+button.button--third {
+  background: #f22c3d;
+}
 
 /* Input */
 input,

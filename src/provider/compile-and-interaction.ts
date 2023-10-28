@@ -38,42 +38,6 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
 
     webviewView.webview.html = this.getHtmlForWebview(webviewView.webview);
 
-    // vscode.workspace.onDidChangeTextDocument(async (e) => {
-    //   const workspaceFolders = vscode.workspace.workspaceFolders;
-    //   const solFiles: vscode.Uri[] = [];
-    //   // how to get root folder
-
-    //   if (workspaceFolders) {
-    //     for (const folder of workspaceFolders) {
-    //       const files = await vscode.workspace.findFiles(
-    //         new vscode.RelativePattern(folder, "**/*.sol"),
-    //         "**/node_modules/**"
-    //       );
-    //       solFiles.push(...files);
-    //     }
-    //   }
-
-    //   const accounts = DEFAULT_ACCOUNTS.map((account) => ({
-    //     address: account.address,
-    //     privateKey: account.privateKey,
-    //     balance: account.balance.toString(),
-    //   }));
-    //   this.view?.webview.postMessage({
-    //     type: "init",
-    //     payload: {
-    //       accounts,
-    //       solFiles,
-    //     },
-    //   });
-    // });
-
-    vscode.workspace.onDidSaveTextDocument(async (e) => {
-      if(e.uri.fsPath.split(".").pop() !== "sol") return;
-      const filePath = e.uri.fsPath;
-      const fileContext = e.getText();
-      
-    });
-
     // handle message
     webviewView.webview.onDidReceiveMessage(async (data) => {
       const { type, payload } = data;
