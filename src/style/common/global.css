@@ -36,7 +36,7 @@ button:hover {
 }
 
 /* Input */
-input,
+input:not([type="checkbox"]):not([type="radio"]),
 select {
   width: 100%;
 
@@ -76,4 +76,9 @@ select {
 .separator h2 {
   padding: 0 2rem;
   font-size: 1.5rem;
+}
+
+/* Input Optinos */
+.input-title {
+  margin-bottom: 8px;
 }

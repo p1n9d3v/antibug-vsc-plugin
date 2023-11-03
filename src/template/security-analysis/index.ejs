@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%-include('head.ejs') %>
+    <title>Security Analysis</title>
+  </head>
+  <body>
+    <button class="audit-report">Audit Report</button>
+    <%- include('seperator.ejs',{text: "Application Rule"}) %>
+    <div class="rule">
+      <div class="rule__list">
+        <%
+        ['Reentrancy','tx-origin','Delegate-call','Owner','Bad-Randomness','Visibility','Self-Destructor'].forEach(
+        function(value){ %> <%- include('checkbox', { text: value }) %> <% });
+        %>
+      </div>
+    </div>
+
+    <%- include('seperator.ejs',{text: "Print Type"}) %>
+    <div class="print">
+      <div class="print__list">
+        <% ['Graph','Detail','Sumary'].forEach( function(value){ %> <%-
+        include('checkbox', { text: value }) %> <% }); %>
+      </div>
+    </div>
+
+    <%- include('seperator.ejs',{text: "Similarity Detection"}) %>
+
+    <div class="similarity">
+      <div>
+        <p class="input-title">File Path</p>
+        <select></select>
+      </div>
+      <div>
+        <p class="input-title">Contract Name</p>
+        <input type="text" />
+      </div>
+      <div>
+        <p class="input-title">Function Name</p>
+        <input type="text" />
+      </div>
+      <button>Analysis</button>
+    </div>
+
+    <!-- SCRIPTS -->
+    <%-include('scripts.ejs') %>
+  </body>
+</html>

@@ -35,9 +35,8 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
       localResourceRoots: [this.extensionUri],
     };
 
-    const htmlPath = vscode.Uri.joinPath(
-      this.extensionUri,
-      "src",
+    const htmlPath = this.getPath(
+      webviewView.webview,
       "template",
       "compile-and-interaction",
       "index.ejs"
@@ -52,7 +51,7 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
       webviewView.webview,
       "controller",
       "compile-and-interaction",
-      "compile.js"
+      "index.js"
     );
 
     const options = [
