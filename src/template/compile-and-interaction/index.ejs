@@ -6,67 +6,15 @@
     <title>Document</title>
   </head>
   <body>
-    <!-- COMPILE-->
+    <!-- COMPILE -->
     <%-include('compile.ejs') %>
+    <!-- INTERACTION -->
+    <%-include('interaction.ejs') %>
     <!-- DEPLOY -->
-    <div class="interaction">
-      <div class="interaction__chain">
-        <p>Chain</p>
-        <select>
-          <option>MainNet</option>
-        </select>
-      </div>
-      <div class="interaction__from-addr">
-        <p>From Address</p>
-        <div class="from__select">
-          <select></select>
-          <div class="from__copy-button">
-            <i class="fas fa-copy"></i>
-          </div>
-        </div>
-      </div>
-      <div class="interaction__to-addr">
-        <p>To Address</p>
-        <input />
-      </div>
-      <div class="interaction__gas">
-        <p>Gas Limit</p>
-        <input type="number" value="3000000" />
-      </div>
-      <div class="interaction__value">
-        <p>Value</p>
-        <div>
-          <input class="value__amount" type="number" />
-          <select class="value__type">
-            <option>ETH</option>
-            <option>Gwei</option>
-            <option>Wei</option>
-          </select>
-        </div>
-      </div>
-    </div>
+    <%-include('deploy.ejs') %>
 
-    <div class="deploy">
-      <div class="deploy__actions">
-        <button class="deploy__deploy button--primary">Deploy</button>
-        <button class="deploy__show-arguments">
-          <i class="fas fa-chevron-down"></i>
-        </button>
-      </div>
-    </div>
-
-    <script
-      nonce="<%= nonce %>"
-      src="https://code.jquery.com/jquery-3.7.1.js"
-      integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4="
-      crossorigin="anonymous"
-    ></script>
-
+    <!-- SCRIPTS -->
+    <%-include('scripts.ejs') %>
     <script nonce="<%= nonce %>" src="<%= controllers.compile %>"></script>
-
-    <script
-      nonce="<%= nonce %>"
-      src="https://use.fontawesome.com/releases/v5.2.0/js/all.js"
-    ></script>
   </body>
 </html>

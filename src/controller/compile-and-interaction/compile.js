@@ -1,6 +1,9 @@
 const vscode = acquireVsCodeApi();
 const oldState = vscode.getState();
+
 (function () {
+  let selectedFromAddress = "";
+
   $(window).ready(() => {
     vscode.postMessage({
       type: "init",
@@ -17,18 +20,42 @@ const oldState = vscode.getState();
     });
   });
 
-  window.addEventListener("message", ({ data }) => {
-    const { type, payload } = data;
+  $(".interaction__from-list select").change((event) => {
+    const privateKey = event.target.value;
+    const option = $(event.target).find(`option[value="${privateKey}"]`);
+    const address = option.text().split("(")[0];
+    selectedFromAddress = address;
+  });
+
+  // from address copy
+  $(".interaction__from .copy").click(() => {
+    navigator.clipboard.writeText(selectedFromAddress);
+  });
+
+  window.addEventListener("message", ({ data: { type, payload } }) => {
     switch (type) {
       case "init": {
         const { accounts, solFiles } = payload;
-        solFiles.map(({ path }) => {
+        solFiles.forEach(({ path }) => {
           const option = $("<option></option>");
           option.val(path);
           option.text(path.split("/").pop());
 
-          $(".compile__files select").append(option);
+          $(".compile__files").append(option);
         });
+
+        accounts.forEach(({ address, balance, privateKey }) => {
+          const option = $("<option></option>");
+          option.val(privateKey);
+          option.text(`${address}(${balance})`);
+
+          $(".interaction__from select").append(option);
+        });
+        selectedFromAddress = accounts[0].address;
+      }
+
+      case "compileResult": {
+        console.log(type, payload);
       }
     }
   });
@@ -37,35 +64,6 @@ const oldState = vscode.getState();
   //   const { type, payload } = data;
 
   //   switch (type) {
-  //     case "init": {
-  //       const { accounts, solFiles } = payload;
-  //       const solFileOptions = solFiles.map(({ path }) => {
-  //         const option = document.createElement("option");
-  //         option.value = path;
-  //         option.innerText = path.split("/").pop();
-  //         return option;
-  //       });
-
-  //       const solFilesSelect = document.querySelector(".compile__files");
-  //       console.log(solFileOptions);
-  //       solFilesSelect.replaceChildren(...solFileOptions);
-
-  //       const fromAddressOptions = accounts.map(
-  //         ({ address, balance, privateKey }) => {
-  //           const option = document.createElement("option");
-  //           option.value = privateKey;
-  //           option.innerText = `${address}(${balance})`;
-  //           return option;
-  //         }
-  //       );
-
-  //       const fromAddressSelect = document.querySelector(
-  //         ".from__select select"
-  //       );
-  //       fromAddressSelect.replaceChildren(...fromAddressOptions);
-
-  //       break;
-  //     }
 
   //     case "compileResult": {
   //       const { abis, bytecodes } = payload;

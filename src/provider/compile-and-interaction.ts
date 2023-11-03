@@ -35,7 +35,40 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
       localResourceRoots: [this.extensionUri],
     };
 
-    webviewView.webview.html = this.getHtmlForWebview(webviewView.webview);
+    const htmlPath = vscode.Uri.joinPath(
+      this.extensionUri,
+      "src",
+      "template",
+      "compile-and-interaction",
+      "index.ejs"
+    ).fsPath;
+    const styles = {
+      compile: this.getPath(
+        webviewView.webview,
+        "style",
+        "compile-and-interaction.css"
+      ),
+    };
+    const controllers = {
+      compile: this.getPath(
+        webviewView.webview,
+        "controller",
+        "compile-and-interaction",
+        "compile.js"
+      ),
+    };
+
+    const options = [
+      this.getPath(webviewView.webview, "template", "compile-and-interaction")
+        .fsPath,
+    ];
+    webviewView.webview.html = this.getHtmlForWebview(
+      webviewView.webview,
+      htmlPath,
+      controllers,
+      styles,
+      options
+    );
 
     webviewView.webview.onDidReceiveMessage(async (data) => {
       const { type, payload } = data;
@@ -128,77 +161,5 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
         }
       }
     });
-  }
-
-  public getHtmlForWebview(webview: vscode.Webview): string {
-    const htmlPath = vscode.Uri.joinPath(
-      this.extensionUri,
-      "src",
-      "template",
-      "compile-and-interaction",
-      "index.ejs"
-    ).fsPath;
-
-    const html = fs.readFileSync(htmlPath, "utf-8");
-    const nonce = this.getNonce();
-
-    return ejs.render(
-      html,
-      {
-        styles: {
-          reset: webview.asWebviewUri(
-            this.commonFiles.get("resetStyle") as vscode.Uri
-          ),
-          global: webview.asWebviewUri(
-            this.commonFiles.get("globalStyle") as vscode.Uri
-          ),
-          compile: webview.asWebviewUri(
-            vscode.Uri.joinPath(
-              this.extensionUri,
-              "src",
-              "style",
-              "compile-and-interaction.css"
-            )
-          ),
-        },
-        controllers: {
-          compile: webview.asWebviewUri(
-            vscode.Uri.joinPath(
-              this.extensionUri,
-              "src",
-              "controller",
-              "compile-and-interaction",
-              "compile.js"
-            )
-          ),
-          interaction: webview.asWebviewUri(
-            vscode.Uri.joinPath(
-              this.extensionUri,
-              "src",
-              "controller",
-              "compile-and-interaction",
-              "interaction.js"
-            )
-          ),
-        },
-        cspSource: webview.cspSource,
-        nonce,
-      },
-      {
-        views: [
-          webview.asWebviewUri(
-            this.commonFiles.get("commonTemplate") as vscode.Uri
-          ).fsPath,
-          webview.asWebviewUri(
-            vscode.Uri.joinPath(
-              this.extensionUri,
-              "src",
-              "template",
-              "compile-and-interaction"
-            )
-          ).fsPath,
-        ],
-      }
-    );
   }
 }

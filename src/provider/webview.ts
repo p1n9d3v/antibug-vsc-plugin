@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+import * as ejs from "ejs";
+import * as fs from "fs";
 
 export default class WebviewProvider implements vscode.WebviewViewProvider {
   public view?: vscode.WebviewView;
@@ -50,6 +52,35 @@ export default class WebviewProvider implements vscode.WebviewViewProvider {
     throw new Error("Method not implemented.");
   }
 
+  public getHtmlForWebview(
+    webview: vscode.Webview,
+    htmlPath: string,
+    controllers: {},
+    styles: {},
+    options?: string[]
+  ) {
+    const ejsData = {
+      common: {
+        reset: this.getPath(webview, "style", "common", "reset.css"),
+        global: this.getPath(webview, "style", "common", "global.css"),
+      },
+      controllers,
+      styles,
+      cspSource: webview.cspSource,
+      nonce: this.getNonce(),
+    };
+
+    const ejsOption = {
+      views: [
+        this.getPath(webview, "template", "common").fsPath,
+        ...(options ?? []),
+      ],
+    };
+
+    const html = fs.readFileSync(htmlPath, "utf-8");
+    return ejs.render(html, ejsData, ejsOption);
+  }
+
   protected getNonce() {
     let text = "";
     const possible =
@@ -58,5 +89,11 @@ export default class WebviewProvider implements vscode.WebviewViewProvider {
       text += possible.charAt(Math.floor(Math.random() * possible.length));
     }
     return text;
+  }
+
+  protected getPath(webview: vscode.Webview, ...path: string[]) {
+    return webview.asWebviewUri(
+      vscode.Uri.joinPath(this.extensionUri, "src", ...path)
+    );
   }
 }

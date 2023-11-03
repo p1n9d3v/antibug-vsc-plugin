@@ -32,93 +32,86 @@ body {
 }
 /* COMPILE END */
 
-/* 
+/* INTERACTION START */
+
 .interaction {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
+
 .interaction > div {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
-.from__select {
+.interaction__from-list {
   display: flex;
 }
 
-.from__select select {
+.interaction__from-list select {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
   padding-right: 55px;
 }
 
-.from__copy-button {
+.interaction__from-list button {
   display: flex;
   align-items: center;
   justify-content: center;
 
   width: 40px;
 
-  background: #1c64f2;
+  background: var(--button-background-primary);
   color: #fff;
   font-size: 18x;
 
   border-top-right-radius: var(--input-border-radius);
   border-bottom-right-radius: var(--input-border-radius);
-
-  cursor: pointer;
-}
-.from__copy-button:hover {
-  opacity: 0.8;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
-.interaction__value div {
+.interaction__value-amount {
   display: flex;
-  gap: 8px;
+}
+.interaction__value input {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 .interaction__value select {
   width: 120px;
+
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
+/* INTERACTION END */
 
-.deploy__actions {
-  display: flex;
-}
-.deploy__deploy {
-  background: #1c64f2;
-
-  border-radius: 0;
-  border-top-left-radius: var(--input-border-radius);
-  border-bottom-left-radius: var(--input-border-radius);
-}
-
-.deploy__show-arguments {
-  width: 40px;
-
-  background: #f9fafb;
-  color: #2b2b2b;
-
-  border-radius: 0;
-  border-top-right-radius: var(--input-border-radius);
-  border-bottom-right-radius: var(--input-border-radius);
-}
-
-.arguments {
+/* DEPLOY START */
+.deploy {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 20px 0;
+  gap: 16px;
 }
-.arguments.hidden {
-  display: none;
-}
-.argument {
+
+.deploy__run {
   display: flex;
-  justify-content: end;
-  align-items: flex-end;
-  gap: 4px;
 }
-.argument__info {
-  width: 100px;
-} */
+
+.deploy__run-deploy {
+  background: var(--button-background-primary);
+
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.deploy__run-show-arguments {
+  width: 40px;
+
+  background: #fff;
+  color: var(--button-background-primary);
+
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+/* DEPLOY END */
