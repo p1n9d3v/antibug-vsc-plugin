@@ -2,13 +2,12 @@ import * as vscode from "vscode";
 import * as ejs from "ejs";
 import * as fs from "fs";
 import * as path from "path";
-
 import WebviewProvider from "./webview";
 
 import { exec } from "child_process";
 import { makeABI } from "../util";
-import { antiBlockNode } from "../blockchain/node";
 import { DEFAULT_ACCOUNTS } from "../util/config";
+import { v4 as uuidv4 } from "uuid";
 
 export default class CompileAndInteractionViewProvider extends WebviewProvider {
   constructor({
@@ -38,7 +37,6 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
 
     webviewView.webview.html = this.getHtmlForWebview(webviewView.webview);
 
-    // handle message
     webviewView.webview.onDidReceiveMessage(async (data) => {
       const { type, payload } = data;
 
@@ -46,7 +44,6 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
         case "init": {
           const workspaceFolders = vscode.workspace.workspaceFolders;
           const solFiles: vscode.Uri[] = [];
-          // how to get root folder
 
           if (workspaceFolders) {
             for (const folder of workspaceFolders) {
@@ -63,6 +60,7 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
             privateKey: account.privateKey,
             balance: account.balance.toString(),
           }));
+
           this.view?.webview.postMessage({
             type: "init",
             payload: {
@@ -74,33 +72,54 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
         }
         case "compile": {
           const { file } = payload;
+
           try {
-            exec(`antibug deploy ${file}`, (error, stdout, stderr) => {
+            const filePath = vscode.Uri.file(file);
+
+            const fileData = await vscode.workspace.fs.readFile(filePath);
+            const fileContent = Buffer.from(fileData).toString();
+
+            const tempFile = path.join(path.dirname(file), `${uuidv4()}.sol`);
+            fs.writeFileSync(tempFile, fileContent);
+
+            exec(`antibug deploy ${tempFile}`, (error, stdout, stderr) => {
               if (error) {
                 console.error(`exec error: ${error}`);
+                fs.unlinkSync(tempFile);
                 return;
               }
               if (stderr) {
                 console.error(`stderr: ${stderr}`);
               }
               const directoryPath = stdout.split(":")[1].trim();
-              const jsonFileName = file
+              const jsonFileName = tempFile
                 .split("/")
                 .pop()
                 ?.split(".")[0]
                 .concat(".json");
-              const jsonFilePath = path.join(directoryPath, jsonFileName);
-              const jsonFile = require(jsonFilePath);
-              const { abis, bytecodes } = jsonFile;
-              const newABIs = makeABI(abis);
 
-              this.view?.webview.postMessage({
-                type: "compileResult",
-                payload: {
-                  abis: newABIs,
-                  bytecodes,
-                },
-              });
+              if (jsonFileName) {
+                const jsonFilePath = path.join(directoryPath, jsonFileName);
+                const jsonFile = require(jsonFilePath);
+
+                for (const contractName in jsonFile) {
+                  const { abis, bytecode } = jsonFile[contractName];
+                  const newABI = makeABI(abis);
+                  console.log(newABI);
+                }
+                // const { abis, bytecodes } = jsonFile;
+
+                // const newABIs = makeABI(abis);
+
+                // this.view?.webview.postMessage({
+                //   type: "compileResult",
+                //   payload: {
+                //     abis: newABIs,
+                //     bytecodes,
+                //   },
+                // });
+              }
+              fs.unlinkSync(tempFile);
             });
           } catch (e) {
             console.log(e);

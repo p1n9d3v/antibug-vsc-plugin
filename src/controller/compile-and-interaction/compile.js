@@ -89,10 +89,10 @@ const oldState = vscode.getState();
             deployDiv.appendChild(argumentsDiv);
           }
         } else {
-          const deployButton = document.querySelector(".deploy__deploy");
-          deployButton.classList.replace("button--third", "button--primary");
           const argumentsDiv = document.querySelector(".arguments");
           argumentsDiv?.remove();
+          const deployButton = document.querySelector(".deploy__deploy");
+          deployButton.classList.replace("button--third", "button--primary");
         }
 
         const abiButton = document.querySelector(".compile-info__abi");
