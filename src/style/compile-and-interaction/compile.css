@@ -1,0 +1,9 @@
+.compile {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.compile__run {
+  background: var(--button-background-primary);
+}

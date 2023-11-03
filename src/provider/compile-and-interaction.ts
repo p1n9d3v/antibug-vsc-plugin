@@ -42,21 +42,18 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
       "compile-and-interaction",
       "index.ejs"
     ).fsPath;
-    const styles = {
-      compile: this.getPath(
-        webviewView.webview,
-        "style",
-        "compile-and-interaction.css"
-      ),
-    };
-    const controllers = {
-      compile: this.getPath(
-        webviewView.webview,
-        "controller",
-        "compile-and-interaction",
-        "compile.js"
-      ),
-    };
+    const style = this.getPath(
+      webviewView.webview,
+      "style",
+      "compile-and-interaction",
+      "index.css"
+    );
+    const controller = this.getPath(
+      webviewView.webview,
+      "controller",
+      "compile-and-interaction",
+      "compile.js"
+    );
 
     const options = [
       this.getPath(webviewView.webview, "template", "compile-and-interaction")
@@ -65,8 +62,8 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
     webviewView.webview.html = this.getHtmlForWebview(
       webviewView.webview,
       htmlPath,
-      controllers,
-      styles,
+      controller,
+      style,
       options
     );
 
@@ -107,41 +104,32 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
           const { file } = payload;
 
           try {
-            const filePath = vscode.Uri.file(file);
+            const compileFilePath = await this.generateCompiledFile(file);
 
-            const fileData = await vscode.workspace.fs.readFile(filePath);
-            const fileContent = Buffer.from(fileData).toString();
+            exec(
+              `antibug deploy ${compileFilePath}`,
+              (error, stdout, stderr) => {
+                if (error) {
+                  console.error(`exec error: ${error}`);
+                  fs.unlinkSync(compileFilePath);
+                  return;
+                }
+                if (stderr) {
+                  console.error(`stderr: ${stderr}`);
+                }
 
-            const tempFile = path.join(path.dirname(file), `${uuidv4()}.sol`);
-            fs.writeFileSync(tempFile, fileContent);
-
-            exec(`antibug deploy ${tempFile}`, (error, stdout, stderr) => {
-              if (error) {
-                console.error(`exec error: ${error}`);
-                fs.unlinkSync(tempFile);
-                return;
-              }
-              if (stderr) {
-                console.error(`stderr: ${stderr}`);
-              }
-              const directoryPath = stdout.split(":")[1].trim();
-              const jsonFileName = tempFile
-                .split("/")
-                .pop()
-                ?.split(".")[0]
-                .concat(".json");
-
-              if (jsonFileName) {
-                const jsonFilePath = path.join(directoryPath, jsonFileName);
-                const jsonFile = require(jsonFilePath);
+                const jsonFile = this.getJsonFileFromStdout(
+                  stdout,
+                  compileFilePath
+                );
 
                 const contracts: any = {};
                 for (const contractName in jsonFile) {
-                  const { abis, bytecode } = jsonFile[contractName];
+                  const { abis, bytecodes } = jsonFile[contractName];
                   const newABI = makeABI(abis);
                   contracts[contractName] = {
                     abis: newABI,
-                    bytecode,
+                    bytecodes,
                   };
                 }
 
@@ -151,9 +139,9 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
                     contracts,
                   },
                 });
+                fs.unlinkSync(compileFilePath);
               }
-              fs.unlinkSync(tempFile);
-            });
+            );
           } catch (e) {
             console.log(e);
           }
@@ -161,5 +149,37 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
         }
       }
     });
+  }
+
+  private async generateCompiledFile(filePath: string) {
+    const fileData = await vscode.workspace.fs.readFile(
+      vscode.Uri.file(filePath)
+    );
+    const fileContent = Buffer.from(fileData).toString();
+
+    const compiledFilePath = path.join(
+      path.dirname(filePath),
+      `${uuidv4()}.sol`
+    );
+    fs.writeFileSync(compiledFilePath, fileContent);
+
+    return compiledFilePath;
+  }
+
+  private getJsonFileFromStdout(stdout: string, fileName: string) {
+    const directoryPath = stdout.split(":")[1].trim();
+    const jsonFileName = fileName
+      .split("/")
+      .pop()
+      ?.split(".")[0]
+      .concat(".json");
+
+    if (!jsonFileName) {
+      throw new Error("Invalid file name");
+    }
+
+    const jsonFilePath = path.join(directoryPath, jsonFileName);
+
+    return require(jsonFilePath);
   }
 }

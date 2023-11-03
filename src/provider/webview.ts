@@ -55,8 +55,8 @@ export default class WebviewProvider implements vscode.WebviewViewProvider {
   public getHtmlForWebview(
     webview: vscode.Webview,
     htmlPath: string,
-    controllers: {},
-    styles: {},
+    controller: vscode.Uri,
+    style: vscode.Uri,
     options?: string[]
   ) {
     const ejsData = {
@@ -64,8 +64,8 @@ export default class WebviewProvider implements vscode.WebviewViewProvider {
         reset: this.getPath(webview, "style", "common", "reset.css"),
         global: this.getPath(webview, "style", "common", "global.css"),
       },
-      controllers,
-      styles,
+      controller,
+      style,
       cspSource: webview.cspSource,
       nonce: this.getNonce(),
     };

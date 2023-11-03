@@ -3,6 +3,7 @@ const oldState = vscode.getState();
 
 (function () {
   let selectedFromAddress = "";
+  let selectedContract = {};
 
   $(window).ready(() => {
     vscode.postMessage({
@@ -22,43 +23,127 @@ const oldState = vscode.getState();
 
   $(".interaction__from-list select").change((event) => {
     const privateKey = event.target.value;
-    const option = $(event.target).find(`option[value="${privateKey}"]`);
-    const address = option.text().split("(")[0];
+    const optionElement = $(event.target).find(`option[value="${privateKey}"]`);
+    const address = optionElement.text().split("(")[0];
     selectedFromAddress = address;
   });
 
-  // from address copy
   $(".interaction__from .copy").click(() => {
     navigator.clipboard.writeText(selectedFromAddress);
+  });
+
+  $(".deploy__run-show-arguments").click(() => {
+    $(".deploy__arguments").toggleClass("hidden");
+  });
+
+  $(".deploy__contracts select").change((event) => {
+    const contract = JSON.parse(event.target.value);
+
+    selectedContract = contract;
+    changeDeployButtonColor(selectedContract);
+    makeContractArgumentsView(selectedContract);
+  });
+
+  $(".deploy__run-deploy").click(() => {
+    console.log(selectedContract);
+  });
+
+  $(".deploy__info-abi").click(() => {
+    navigator.clipboard.writeText(JSON.stringify(selectedContract.abis));
+  });
+  $(".deploy__info-bytecodes").click(() => {
+    navigator.clipboard.writeText(selectedContract.bytecodes);
   });
 
   window.addEventListener("message", ({ data: { type, payload } }) => {
     switch (type) {
       case "init": {
         const { accounts, solFiles } = payload;
-        solFiles.forEach(({ path }) => {
-          const option = $("<option></option>");
-          option.val(path);
-          option.text(path.split("/").pop());
 
-          $(".compile__files").append(option);
+        solFiles.forEach(({ path }) => {
+          const optionElement = $("<option></option>");
+          optionElement.val(path);
+          optionElement.text(path.split("/").pop());
+
+          $(".compile__files select").append(optionElement);
         });
 
         accounts.forEach(({ address, balance, privateKey }) => {
-          const option = $("<option></option>");
-          option.val(privateKey);
-          option.text(`${address}(${balance})`);
+          const optionElement = $("<option></option>");
+          optionElement.val(privateKey);
+          optionElement.text(`${address}(${balance})`);
 
-          $(".interaction__from select").append(option);
+          $(".interaction__from select").append(optionElement);
         });
+
         selectedFromAddress = accounts[0].address;
+
+        break;
       }
 
       case "compileResult": {
-        console.log(type, payload);
+        const { contracts } = payload;
+
+        const contractNames = Object.keys(contracts);
+        const contractsSelectElement = $(".deploy__contracts select");
+        contractsSelectElement.empty();
+
+        contractNames.forEach((contractName) => {
+          const optionElement = $("<option></option>");
+          optionElement.val(JSON.stringify(contracts[contractName]));
+          optionElement.text(contractName);
+
+          contractsSelectElement.append(optionElement);
+        });
+
+        selectedContract = contracts[contractNames[0]];
+
+        changeDeployButtonColor(selectedContract);
+        makeContractArgumentsView(selectedContract);
+        break;
       }
     }
   });
+
+  function changeDeployButtonColor(selectedContract) {
+    const { abis } = selectedContract;
+    const constructorInputs = abis[0];
+
+    if (
+      constructorInputs.type === "constructor" &&
+      constructorInputs.stateMutability === "payable"
+    ) {
+      $(".deploy__run-deploy").css({
+        background: "var(--button-background-tertiary)",
+      });
+    } else {
+      $(".deploy__run-deploy").css({
+        background: "var(--button-background-primary)",
+      });
+    }
+  }
+
+  function makeContractArgumentsView(selectedContract) {
+    const { abis } = selectedContract;
+    const constructorInputs = abis[0];
+
+    const deployArgumentsDivElement = $(".deploy__arguments");
+    deployArgumentsDivElement.empty();
+
+    if (constructorInputs.type === "constructor") {
+      constructorInputs.inputs.forEach((input) => {
+        const { name, type } = input;
+        deployArgumentsDivElement.append(`
+        <div class="deploy__argument">
+          <div class="deploy__argument-info">
+            <div class="type">${type}</div> <div class="name">${name}</div>
+          </div>
+          <input type="text" />
+        </div
+      `);
+      });
+    }
+  }
 
   // window.addEventListener("message", ({ data }) => {
   //   const { type, payload } = data;
@@ -130,22 +215,3 @@ const oldState = vscode.getState();
   //   }
   // });
 })();
-
-function makeArgumentInput(input) {
-  const { name, type } = input;
-  const argumentDiv = document.createElement("div");
-  argumentDiv.className = "argument";
-  const argumentInfoDiv = document.createElement("div");
-  argumentInfoDiv.className = "argument__info";
-
-  const argumentInfoSpan = document.createElement("span");
-  argumentInfoSpan.innerText = `${type} ${name}`;
-
-  const argumentInput = document.createElement("input");
-
-  argumentDiv.appendChild(argumentInfoDiv);
-  argumentInfoDiv.appendChild(argumentInfoSpan);
-  argumentDiv.appendChild(argumentInput);
-
-  return [argumentDiv, argumentInput];
-}

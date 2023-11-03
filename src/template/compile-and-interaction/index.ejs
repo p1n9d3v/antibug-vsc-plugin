@@ -2,19 +2,25 @@
 <html lang="en">
   <head>
     <%-include('head.ejs') %>
-    <link href="<%= styles.compile %>" rel="stylesheet" />
     <title>Document</title>
   </head>
   <body>
-    <!-- COMPILE -->
+    <%- include('seperator.ejs',{text: "Compile"}) %>
+    <!-- COMPILE START-->
     <%-include('compile.ejs') %>
-    <!-- INTERACTION -->
+    <!-- COMPILE END -->
+
+    <%- include('seperator.ejs',{text: "Interaction"}) %>
+    <!-- INTERACTION START-->
     <%-include('interaction.ejs') %>
-    <!-- DEPLOY -->
+    <!-- INTERACTION END -->
+
+    <%- include('seperator.ejs',{text: "Deploy"}) %>
+    <!-- DEPLOY START-->
     <%-include('deploy.ejs') %>
+    <!-- DEPLOY END -->
 
     <!-- SCRIPTS -->
     <%-include('scripts.ejs') %>
-    <script nonce="<%= nonce %>" src="<%= controllers.compile %>"></script>
   </body>
 </html>

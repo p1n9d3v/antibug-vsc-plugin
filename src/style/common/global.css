@@ -5,9 +5,12 @@
   --button-background-primary: #1c64f2;
   --button-background-secondary: #d1850b;
   --button-background-tertiary: #f22c3d;
+
+  --border-color: #c792ea;
 }
 * {
   font-family: var(--vscode-font-family);
+  box-sizing: border-box;
 }
 
 body {
@@ -16,6 +19,7 @@ body {
 /* Button */
 button {
   width: 100%;
+
   padding: 12px;
 
   border: none;
@@ -56,4 +60,20 @@ select {
     calc(100% - 15px) calc(1em + 2px), calc(100% - 2.5em) 0.5em;
   background-size: 5px 5px, 5px 5px, 1px 1.5em;
   background-repeat: no-repeat;
+}
+
+/* Separator */
+.separator {
+  display: flex;
+  align-items: center;
+}
+
+.separator .line {
+  height: 3px;
+  flex: 1;
+  background-color: var(--border-color);
+}
+.separator h2 {
+  padding: 0 2rem;
+  font-size: 1.5rem;
 }
