@@ -34,6 +34,8 @@ const oldState = vscode.getState();
 
   $(".deploy__run-show-arguments").click(() => {
     $(".deploy__arguments").toggleClass("hidden");
+
+    $(".deploy__run-show-arguments").toggleClass("rotate");
   });
 
   $(".deploy__contracts select").change((event) => {
@@ -130,7 +132,13 @@ const oldState = vscode.getState();
     const deployArgumentsDivElement = $(".deploy__arguments");
     deployArgumentsDivElement.empty();
 
-    if (constructorInputs.type === "constructor") {
+    if (
+      constructorInputs.type === "constructor" &&
+      constructorInputs.inputs.length > 0
+    ) {
+      $(".deploy__run-show-arguments svg")
+        .removeClass("fa-minus")
+        .addClass("fa-chevron-down");
       constructorInputs.inputs.forEach((input) => {
         const { name, type } = input;
         deployArgumentsDivElement.append(`
@@ -142,6 +150,10 @@ const oldState = vscode.getState();
         </div
       `);
       });
+    } else {
+      $(".deploy__run-show-arguments svg")
+        .removeClass("fa-chevron-down")
+        .addClass("fa-minus");
     }
   }
 

@@ -35,6 +35,13 @@
   gap: 16px;
 }
 
+.deploy__run-show-arguments svg {
+  transition: transform 0.3s ease;
+}
+.deploy__run-show-arguments.rotate svg.fa-chevron-down {
+  transform: rotate(-180deg);
+}
+
 .deploy__argument-info {
   min-width: 160px;
   display: flex;
