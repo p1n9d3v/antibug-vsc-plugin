@@ -1,6 +1,10 @@
 :root {
   --input-border-radius: 8px;
   --button-border-radius: 4px;
+
+  --button-background-primary: #1c64f2;
+  --button-background-secondary: #d1850b;
+  --button-background-tertiary: #f22c3d;
 }
 * {
   font-family: var(--vscode-font-family);
@@ -25,16 +29,6 @@ button {
 
 button:hover {
   opacity: 0.8;
-}
-
-button.button--primary {
-  background: #1c64f2;
-}
-button.button--secondary {
-  background: #d1850b;
-}
-button.button--third {
-  background: #f22c3d;
 }
 
 /* Input */

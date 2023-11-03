@@ -3,31 +3,37 @@ body {
   flex-direction: column;
   gap: 24px;
 }
+
+// Compile Start
 .compile {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
-.compile__compile {
+
+.compile_files {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   gap: 12px;
 }
 
-.compile-info {
+.compile__info {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
 }
-.compile-info__abi,
-.compile-info__bytecodes {
+
+.compile__info-abi,
+.compile__info-bytecodes {
   cursor: pointer;
 }
-.compile-info i {
+
+.compile__info i {
   font-size: 20px;
   color: #fff;
 }
+// Compile End
 
 .interaction {
   display: flex;
