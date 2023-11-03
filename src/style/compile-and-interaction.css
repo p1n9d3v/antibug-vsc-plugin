@@ -4,18 +4,15 @@ body {
   gap: 24px;
 }
 
-// Compile Start
+/* COMPILE START */
 .compile {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.compile_files {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 12px;
+.compile__run {
+  background: var(--button-background-primary);
 }
 
 .compile__info {
@@ -33,8 +30,9 @@ body {
   font-size: 20px;
   color: #fff;
 }
-// Compile End
+/* COMPILE END */
 
+/* 
 .interaction {
   display: flex;
   flex-direction: column;
@@ -123,4 +121,4 @@ body {
 }
 .argument__info {
   width: 100px;
-}
+} */

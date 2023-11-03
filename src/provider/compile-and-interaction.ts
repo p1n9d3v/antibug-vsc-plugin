@@ -102,22 +102,22 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
                 const jsonFilePath = path.join(directoryPath, jsonFileName);
                 const jsonFile = require(jsonFilePath);
 
+                const contracts: any = {};
                 for (const contractName in jsonFile) {
                   const { abis, bytecode } = jsonFile[contractName];
                   const newABI = makeABI(abis);
-                  console.log(newABI);
+                  contracts[contractName] = {
+                    abis: newABI,
+                    bytecode,
+                  };
                 }
-                // const { abis, bytecodes } = jsonFile;
 
-                // const newABIs = makeABI(abis);
-
-                // this.view?.webview.postMessage({
-                //   type: "compileResult",
-                //   payload: {
-                //     abis: newABIs,
-                //     bytecodes,
-                //   },
-                // });
+                this.view?.webview.postMessage({
+                  type: "compileResult",
+                  payload: {
+                    contracts,
+                  },
+                });
               }
               fs.unlinkSync(tempFile);
             });
@@ -135,7 +135,8 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
       this.extensionUri,
       "src",
       "template",
-      "compile-and-interaction.ejs"
+      "compile-and-interaction",
+      "index.ejs"
     ).fsPath;
 
     const html = fs.readFileSync(htmlPath, "utf-8");
@@ -187,6 +188,14 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
         views: [
           webview.asWebviewUri(
             this.commonFiles.get("commonTemplate") as vscode.Uri
+          ).fsPath,
+          webview.asWebviewUri(
+            vscode.Uri.joinPath(
+              this.extensionUri,
+              "src",
+              "template",
+              "compile-and-interaction"
+            )
           ).fsPath,
         ],
       }
