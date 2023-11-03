@@ -36,6 +36,17 @@ const oldState = vscode.getState();
     $(".deploy__arguments").toggleClass("hidden");
 
     $(".deploy__run-show-arguments").toggleClass("rotate");
+
+    const deployArgumentsElement = $(".deploy__arguments");
+    if (deployArgumentsElement.hasClass("hidden")) {
+      $("html, body").animate({ scrollTop: 0 }, "fast");
+    } else {
+      $("html, body").animate(
+        { scrollTop: $(document).height() },
+        "fast",
+        "swing"
+      );
+    }
   });
 
   $(".deploy__contracts select").change((event) => {
