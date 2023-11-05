@@ -101,48 +101,36 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
         }
         case "compile": {
           const { file } = payload;
-
+          let compileFilePath = "";
           try {
-            const compileFilePath = await this.generateCompiledFile(file);
+            compileFilePath = await this.generateCompiledFile(file);
 
-            exec(
-              `antibug deploy ${compileFilePath}`,
-              (error, stdout, stderr) => {
-                if (error) {
-                  console.error(`exec error: ${error}`);
-                  fs.unlinkSync(compileFilePath);
-                  return;
-                }
-                if (stderr) {
-                  console.error(`stderr: ${stderr}`);
-                }
+            const stdout = await this.compile(compileFilePath);
 
-                const jsonFile = this.getJsonFileFromStdout(
-                  stdout,
-                  compileFilePath
-                );
-
-                const contracts: any = {};
-                for (const contractName in jsonFile) {
-                  const { abis, bytecodes } = jsonFile[contractName];
-                  const newABI = makeABI(abis);
-                  contracts[contractName] = {
-                    abis: newABI,
-                    bytecodes,
-                  };
-                }
-
-                this.view?.webview.postMessage({
-                  type: "compileResult",
-                  payload: {
-                    contracts,
-                  },
-                });
-                fs.unlinkSync(compileFilePath);
-              }
+            const jsonFile = this.getJsonFileFromStdout(
+              stdout,
+              compileFilePath
             );
+
+            const contracts: any = {};
+            for (const contractName in jsonFile) {
+              const { abis, bytecodes } = jsonFile[contractName];
+              const newABI = makeABI(abis);
+              contracts[contractName] = {
+                abis: newABI,
+                bytecodes,
+              };
+            }
+            this.view?.webview.postMessage({
+              type: "compileResult",
+              payload: {
+                contracts,
+              },
+            });
           } catch (e) {
-            console.log(e);
+            fs.unlinkSync(compileFilePath);
+          } finally {
+            fs.unlinkSync(compileFilePath);
           }
           break;
         }
@@ -180,5 +168,21 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
     const jsonFilePath = path.join(directoryPath, jsonFileName);
 
     return require(jsonFilePath);
+  }
+
+  private async compile(filePath: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      exec(`antibug deploy ${filePath}`, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`exec error: ${error}`);
+          throw new Error("Compile error");
+        }
+        if (stderr) {
+          console.error(`stderr: ${stderr}`);
+          throw new Error("Compile std error");
+        }
+        return resolve(stdout);
+      });
+    });
   }
 }
