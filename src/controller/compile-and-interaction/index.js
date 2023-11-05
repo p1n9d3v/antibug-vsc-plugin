@@ -4,7 +4,6 @@ const oldState = vscode.getState();
 (function () {
   let selectedFromAddress = "";
   let selectedContract = {};
-  let loadingState = false;
   $(window).ready(() => {
     vscode.postMessage({
       type: "init",
@@ -57,7 +56,28 @@ const oldState = vscode.getState();
   });
 
   $(".deploy__run-deploy").click(() => {
-    console.log(selectedContract);
+    const value = $(".interaction__value-amount input").val();
+    const gasLimit = $(".interaction__gas input").val();
+    const fromPrivateKey = $(".interaction__from-list select").val();
+
+    const deployArgumentsElement = $(".deploy__arguments");
+    const deployArguments = [];
+    deployArgumentsElement
+      .find(".deploy__argument input")
+      .each((index, input) => {
+        deployArguments.push(input.value);
+      });
+
+    vscode.postMessage({
+      type: "deploy",
+      payload: {
+        value,
+        gasLimit,
+        fromPrivateKey,
+        contract: selectedContract,
+        deployArguments,
+      },
+    });
   });
 
   $(".deploy__info-abi").click(() => {
@@ -160,7 +180,7 @@ const oldState = vscode.getState();
           <div class="deploy__argument-info">
             <div class="type">${type}</div> <div class="name">${name}</div>
           </div>
-          <input type="text" />
+          <input  type="text" />
         </div
       `);
       });

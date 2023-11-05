@@ -14,7 +14,7 @@ import { DEFAULT_ACCOUNTS } from "../util/config";
 
 // TODO: chain, eip, fork version 설정을 추후 다뤄야함
 // 현재는 Mainnet, Shanghai로 고정
-class AntiBlockNode {
+export default class AntiBlockNode {
   public common: Common;
   public blockchain: AntiBlockChain;
   public vm: VM;
@@ -154,4 +154,3 @@ class AntiBlockNode {
   }
 }
 
-export const antiBlockNode = AntiBlockNode.create();

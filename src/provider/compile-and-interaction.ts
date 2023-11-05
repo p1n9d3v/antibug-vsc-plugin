@@ -2,24 +2,39 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import WebviewProvider from "./webview";
+import AntiBlockNode from "../blockchain/node";
 
 import { exec } from "child_process";
-import { makeABI } from "../util";
+import { encodeCallData, makeABI } from "../util";
 import { DEFAULT_ACCOUNTS } from "../util/config";
 import { v4 as uuidv4 } from "uuid";
+import {
+  bigIntToHex,
+  bytesToHex,
+  hexToBytes,
+  intToHex,
+} from "@ethereumjs/util";
+import { FeeMarketEIP1559Transaction } from "@ethereumjs/tx";
 
 export default class CompileAndInteractionViewProvider extends WebviewProvider {
+  private node!: AntiBlockNode;
+
   constructor({
     extensionUri,
     viewType,
+    antibugNode,
   }: {
     extensionUri: vscode.Uri;
     viewType: string;
+    antibugNode: AntiBlockNode;
   }) {
     super({
       extensionUri,
       viewType,
     });
+    (async () => {
+      this.node = antibugNode;
+    })();
   }
 
   public resolveWebviewView(
@@ -130,6 +145,69 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
             fs.unlinkSync(compileFilePath);
           } finally {
             fs.unlinkSync(compileFilePath);
+          }
+          break;
+        }
+        case "deploy": {
+          const { gasLimit, fromPrivateKey, value, contract, deployArguments } =
+            payload;
+          const latestBlock = this.node.getLatestBlock();
+          const estimatedGasLimit = this.node.getEstimatedGasLimit(latestBlock); // 추후 필요할듯
+          const baseFee = latestBlock.header.calcNextBaseFee();
+
+          const { abis, bytecodes } = contract;
+          const data = encodeCallData(
+            abis.map((abi: any) => abi.signature),
+            "constructor",
+            deployArguments
+          ).slice(2);
+
+          const callData = bytecodes.concat(data);
+          const txData = {
+            to: undefined,
+            value: bigIntToHex(BigInt(value)),
+            maxFeePerGas: baseFee,
+            gasLimit: bigIntToHex(BigInt(gasLimit)),
+            nonce: await this.node.getNonce(fromPrivateKey),
+            data: callData,
+          };
+
+          const tx = FeeMarketEIP1559Transaction.fromTxData(txData).sign(
+            hexToBytes(fromPrivateKey)
+          );
+          const { receipt } = await this.node.mine(tx);
+          if (receipt.createdAddress) {
+            const contractAddress = receipt.createdAddress.toString();
+
+            // Call
+            // const latestBlock = this.node.getLatestBlock();
+            // const estimatedGasLimit =
+            //   this.node.getEstimatedGasLimit(latestBlock); // 추후 필요할듯
+            // const baseFee = latestBlock.header.calcNextBaseFee();
+
+            // const callData = encodeCallData(
+            //   abis.map((abi: any) => abi.signature),
+            //   "name",
+            //   []
+            // );
+            // const txData = {
+            //   to: contractAddress,
+            //   value: bigIntToHex(0n),
+            //   maxFeePerGas: baseFee,
+            //   gasLimit: bigIntToHex(BigInt(estimatedGasLimit)),
+            //   nonce: await this.node.getNonce(fromPrivateKey),
+            //   data: callData,
+            // };
+
+            // const tx = FeeMarketEIP1559Transaction.fromTxData(txData).sign(
+            //   hexToBytes(fromPrivateKey)
+            // );
+
+            // const result = await this.node.runTx({ tx });
+            // console.log(
+            //   "result",
+            //   bytesToHex(result.execResult.returnValue).toString()
+            // );
           }
           break;
         }

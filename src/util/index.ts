@@ -5,10 +5,15 @@ import { Address, bigIntToHex, hexToBytes } from "@ethereumjs/util";
 export const makeABI = (abis: ABI[]) => {
   const ABI = abis.map((data) => {
     const { name, inputs, type } = data;
-    if (type !== "function") return data;
 
     const inputsTypes = inputs.map(({ type }) => type).join(",");
-    const signature = `function ${name}(${inputsTypes})`;
+    let signature = "";
+    if (type === "constructor") {
+      signature = `constructor(${inputsTypes})`;
+    }
+    if (type === "function") {
+      signature = `function ${name}(${inputsTypes})`;
+    }
     const newABI = {
       ...data,
       signature,
@@ -20,11 +25,14 @@ export const makeABI = (abis: ABI[]) => {
 };
 
 export const encodeCallData = (
-  signature: string,
+  signature: string[],
   name: string,
   args: any[]
 ) => {
-  const iface = new ethers.utils.Interface([signature]);
+  const iface = new ethers.utils.Interface(signature);
+  if (name === "constructor") {
+    return iface.encodeDeploy(args);
+  }
   const data = iface.encodeFunctionData(name, args);
   return data;
 };

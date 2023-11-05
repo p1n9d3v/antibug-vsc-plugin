@@ -1,11 +1,14 @@
 import * as vscode from "vscode";
 import CompileAndInteractionViewProvider from "./provider/compile-and-interaction";
 import SecurityAnalysisViewProvider from "./provider/security-analysis";
+import AntiBlockNode from "./blockchain/node";
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
+  const antibugNode = await AntiBlockNode.create();
   const compileAndInteractionView = new CompileAndInteractionViewProvider({
     extensionUri: context.extensionUri,
     viewType: "antiblock.compile-and-interaction",
+    antibugNode,
   });
 
   const securityAnalysisView = new SecurityAnalysisViewProvider({
