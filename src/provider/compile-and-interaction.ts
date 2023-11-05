@@ -15,6 +15,7 @@ import {
   intToHex,
 } from "@ethereumjs/util";
 import { FeeMarketEIP1559Transaction } from "@ethereumjs/tx";
+import ContractInteractionWebviewPanelProvider from "./contract-interaction";
 
 export default class CompileAndInteractionViewProvider extends WebviewProvider {
   private node!: AntiBlockNode;
@@ -178,30 +179,24 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
           const { receipt } = await this.node.mine(tx);
           if (receipt.createdAddress) {
             const contractAddress = receipt.createdAddress.toString();
-            const panel = vscode.window.createWebviewPanel(
-              "antiblock.function-interaction",
-              contractAddress,
-              vscode.ViewColumn.Beside,
-              {
-                enableScripts: true,
-                localResourceRoots: [this.extensionUri],
-              }
-            );
-            panel.webview.html = this.getHtmlForWebview(
-              webviewView.webview,
-              htmlPath,
-              controller,
-              style,
-              options
-            );
-            panel.webview.onDidReceiveMessage(async (data) => {
+            const panel = new ContractInteractionWebviewPanelProvider({
+              extensionUri: this.extensionUri,
+              viewType: "antiblock.contract-interaction",
+              title: contractAddress,
+              column: vscode.ViewColumn.Beside,
+            });
+            panel.render();
+            panel.onDidReceiveMessage(async (data) => {
               const { type, payload } = data;
               switch (type) {
                 case "init": {
-                  console.log("fucnkldsfjaklsdjfalksdjflakj")
+                  console.log(
+                    "lskdjflaksdjfaklsdjfalksdfjalksdfjalksdjfalksdjf"
+                  );
                 }
               }
-            })
+            });
+
             // Call
             // const latestBlock = this.node.getLatestBlock();
             // const estimatedGasLimit =

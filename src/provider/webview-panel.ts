@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as ejs from "ejs";
 import * as fs from "fs";
+
 export default class WebviewPanelProvider {
   public panel: vscode.WebviewPanel;
   public extensionUri: vscode.Uri;
@@ -30,8 +31,8 @@ export default class WebviewPanelProvider {
     );
   }
 
-  public onDidReceiveMessage() {
-    throw new Error("Method not implemented.");
+  public onDidReceiveMessage(callback: (data: any) => void) {
+    this.panel.webview.onDidReceiveMessage(callback);
   }
 
   public getHtmlForWebview(
