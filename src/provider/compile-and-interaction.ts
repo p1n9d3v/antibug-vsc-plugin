@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import * as ejs from "ejs";
 import * as fs from "fs";
 import * as path from "path";
 import WebviewProvider from "./webview";

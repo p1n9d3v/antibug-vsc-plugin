@@ -4,7 +4,7 @@ const oldState = vscode.getState();
 (function () {
   let selectedFromAddress = "";
   let selectedContract = {};
-
+  let loadingState = false;
   $(window).ready(() => {
     vscode.postMessage({
       type: "init",
@@ -12,6 +12,7 @@ const oldState = vscode.getState();
   });
 
   $(".compile__run").click(() => {
+    $(".compile__run").addClass("loading");
     const selectedSolFile = $(".compile__files select").val();
     vscode.postMessage({
       type: "compile",
@@ -113,6 +114,8 @@ const oldState = vscode.getState();
 
         changeDeployButtonColor(selectedContract);
         makeContractArgumentsView(selectedContract);
+
+        $(".compile__run").removeClass("loading");
         break;
       }
     }
