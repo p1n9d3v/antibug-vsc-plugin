@@ -4,6 +4,10 @@
   gap: 16px;
 }
 
+.compile__files select {
+  padding-right: 55px;
+}
+
 .compile__run {
   position: relative;
   background: var(--button-background-primary);

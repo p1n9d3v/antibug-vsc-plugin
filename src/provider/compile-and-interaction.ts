@@ -178,7 +178,30 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
           const { receipt } = await this.node.mine(tx);
           if (receipt.createdAddress) {
             const contractAddress = receipt.createdAddress.toString();
-
+            const panel = vscode.window.createWebviewPanel(
+              "antiblock.function-interaction",
+              contractAddress,
+              vscode.ViewColumn.Beside,
+              {
+                enableScripts: true,
+                localResourceRoots: [this.extensionUri],
+              }
+            );
+            panel.webview.html = this.getHtmlForWebview(
+              webviewView.webview,
+              htmlPath,
+              controller,
+              style,
+              options
+            );
+            panel.webview.onDidReceiveMessage(async (data) => {
+              const { type, payload } = data;
+              switch (type) {
+                case "init": {
+                  console.log("fucnkldsfjaklsdjfalksdjflakj")
+                }
+              }
+            })
             // Call
             // const latestBlock = this.node.getLatestBlock();
             // const estimatedGasLimit =

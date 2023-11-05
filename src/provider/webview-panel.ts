@@ -1,27 +1,36 @@
 import * as vscode from "vscode";
 import * as ejs from "ejs";
 import * as fs from "fs";
-
-export default class WebviewProvider implements vscode.WebviewViewProvider {
-  public view?: vscode.WebviewView;
+export default class WebviewPanelProvider {
+  public panel: vscode.WebviewPanel;
   public extensionUri: vscode.Uri;
   public viewType: string;
+
   constructor({
     extensionUri,
     viewType,
+    title,
+    column = vscode.ViewColumn.Beside,
   }: {
     extensionUri: vscode.Uri;
     viewType: string;
+    title: string;
+    column: vscode.ViewColumn;
   }) {
-    this.extensionUri = extensionUri;
     this.viewType = viewType;
+    this.extensionUri = extensionUri;
+    this.panel = vscode.window.createWebviewPanel(
+      "antiblock.function-interaction",
+      title,
+      column,
+      {
+        enableScripts: true,
+        localResourceRoots: [extensionUri],
+      }
+    );
   }
 
-  public resolveWebviewView(
-    webviewView: vscode.WebviewView,
-    context: vscode.WebviewViewResolveContext<unknown>,
-    token: vscode.CancellationToken
-  ): void | Thenable<void> {
+  public onDidReceiveMessage() {
     throw new Error("Method not implemented.");
   }
 
