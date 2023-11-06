@@ -26,24 +26,24 @@ export default class ContractInteractionWebviewPanelProvider extends WebviewPane
     const htmlPath = this.getPath(
       this.panel.webview,
       "template",
-      "compile-and-interaction",
+      "contract-interaction",
       "index.ejs"
     ).fsPath;
     const style = this.getPath(
       this.panel.webview,
       "style",
-      "compile-and-interaction",
+      "contract-interaction",
       "index.css"
     );
     const controller = this.getPath(
       this.panel.webview,
       "controller",
-      "compile-and-interaction",
+      "contract-interaction",
       "index.js"
     );
 
     const options = [
-      this.getPath(this.panel.webview, "template", "compile-and-interaction")
+      this.getPath(this.panel.webview, "template", "contract-interaction")
         .fsPath,
     ];
 

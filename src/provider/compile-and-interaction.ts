@@ -18,7 +18,7 @@ import { FeeMarketEIP1559Transaction } from "@ethereumjs/tx";
 import ContractInteractionWebviewPanelProvider from "./contract-interaction";
 
 export default class CompileAndInteractionViewProvider extends WebviewProvider {
-  private node!: AntiBlockNode;
+  public node!: AntiBlockNode;
 
   constructor({
     extensionUri,
@@ -179,20 +179,28 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
           const { receipt } = await this.node.mine(tx);
           if (receipt.createdAddress) {
             const contractAddress = receipt.createdAddress.toString();
-            const panel = new ContractInteractionWebviewPanelProvider({
+
+            const panelProvider = new ContractInteractionWebviewPanelProvider({
               extensionUri: this.extensionUri,
               viewType: "antiblock.contract-interaction",
               title: contractAddress,
               column: vscode.ViewColumn.Beside,
             });
-            panel.render();
-            panel.onDidReceiveMessage(async (data) => {
+            panelProvider.render();
+            panelProvider.onDidReceiveMessage(async (data) => {
               const { type, payload } = data;
               switch (type) {
                 case "init": {
-                  console.log(
-                    "lskdjflaksdjfaklsdjfalksdfjalksdfjalksdjfalksdjf"
+                  const abisWithoutConstructor = abis.filter(
+                    (abi: any) => abi.type !== "constructor"
                   );
+                  panelProvider.panel.webview.postMessage({
+                    type: "init",
+                    payload: {
+                      contractAddress,
+                      abis: abisWithoutConstructor,
+                    },
+                  });
                 }
               }
             });
