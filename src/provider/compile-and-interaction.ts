@@ -201,6 +201,10 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
                       abis: abisWithoutConstructor,
                     },
                   });
+                  break;
+                }
+                case "call": {
+                  break;
                 }
               }
             });

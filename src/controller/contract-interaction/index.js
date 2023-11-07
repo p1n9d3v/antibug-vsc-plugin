@@ -9,6 +9,53 @@ const oldState = vscode.getState();
   });
 
   // 솔직히 없어도 됌 ㅋㅋ 걍재미로 넣어봄
+
+  window.addEventListener("message", ({ data: { type, payload } }) => {
+    switch (type) {
+      case "init": {
+        const { contractAddress, abis } = payload;
+        const functionsElement = $(".functions");
+        functionsElement.empty();
+
+        abis.forEach((abi) => {
+          const functionElement = $(makeFunctionElement(abi));
+
+          functionElement.find("button").click(() => {
+            const ineractionInput = functionElement
+              .find(".function__interaction input")
+              .val();
+            const argumentsInput = functionElement
+              .find(".function__arguments input")
+              .map((index, input) => input.value)
+              .toArray();
+
+            const resultArguments =
+              argumentsInput.length > 0 ? argumentsInput : ineractionInput;
+
+            const type = abi.stateMutability === "view" ? "call" : "send";
+            vscode.postMessage({
+              type,
+              payload: {
+                contractAddress,
+                functionName: abi.name,
+                arguments: resultArguments,
+              },
+            });
+          });
+
+          functionsElement.append(functionElement);
+        });
+
+        // animation
+        interactionButtonAnimation();
+
+        break;
+      }
+    }
+  });
+})();
+
+function interactionButtonAnimation() {
   const functionElements = $(".function");
   functionElements.each((index, element) => {
     element = $(element);
@@ -28,13 +75,38 @@ const oldState = vscode.getState();
       }
     });
   });
+}
 
-  window.addEventListener("message", ({ data: { type, payload } }) => {
-    switch (type) {
-      case "init": {
-        console.log(payload);
-        break;
-      }
-    }
-  });
-})();
+function makeFunctionElement(abi) {
+  return `
+  <div class="function">
+              <div class="function__interaction">
+                <button class=${abi.stateMutability}>${abi.name}</button>
+                ${abi.inputs.length > 0 ? "<input />" : ""}
+                <div class="function__show-arguments">
+                  ${
+                    abi.inputs.length > 1
+                      ? `<i class="fa fa-chevron-down"></i>`
+                      : ""
+                  }
+                </div>
+              </div>
+              ${
+                abi.inputs.length > 0
+                  ? `<div class="function__arguments hidden">
+                ${abi.inputs
+                  .map(
+                    (input) => `
+                        <div class="function__argument">
+                          <div>${input.type} ${input.name}</div>
+                          <input />
+                        </div>
+                      `
+                  )
+                  .join("")}
+                </div>`
+                  : ""
+              }
+            </div>
+  `;
+}
