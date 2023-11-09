@@ -78,35 +78,35 @@ function interactionButtonAnimation() {
 }
 
 function makeFunctionElement(abi) {
+  const inputs = abi.inputs
+    .map((input) => `${input.type} ${input.name}`)
+    .join(", ");
+  console.log(inputs);
   return `
-  <div class="function">
-              <div class="function__interaction">
-                <button class=${abi.stateMutability}>${abi.name}</button>
-                ${abi.inputs.length > 0 ? "<input />" : ""}
-                <div class="function__show-arguments">
-                  ${
-                    abi.inputs.length > 1
-                      ? `<i class="fa fa-chevron-down"></i>`
-                      : ""
-                  }
+    <div class="function">
+      <div class="function__interaction">
+        <button class=${abi.stateMutability}>${abi.name}</button>
+        ${abi.inputs.length > 0 ? `<input  placeholder="${inputs}"/>` : ""}
+        <div class="function__show-arguments">
+          ${abi.inputs.length > 1 ? `<i class="fa fa-chevron-down"></i>` : ""}
+        </div>
+      </div>
+      ${
+        abi.inputs.length > 0
+          ? `<div class="function__arguments hidden">
+        ${abi.inputs
+          .map(
+            (input) => `
+                <div class="function__argument">
+                  <div>${input.type} ${input.name}</div>
+                  <input />
                 </div>
-              </div>
-              ${
-                abi.inputs.length > 0
-                  ? `<div class="function__arguments hidden">
-                ${abi.inputs
-                  .map(
-                    (input) => `
-                        <div class="function__argument">
-                          <div>${input.type} ${input.name}</div>
-                          <input />
-                        </div>
-                      `
-                  )
-                  .join("")}
-                </div>`
-                  : ""
-              }
-            </div>
+              `
+          )
+          .join("")}
+        </div>`
+          : ""
+      }
+    </div>
   `;
 }
