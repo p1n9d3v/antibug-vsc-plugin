@@ -124,7 +124,18 @@ const oldState = vscode.getState();
 
         break;
       }
-
+      case "changeAccountState": {
+        const { balance } = payload;
+        $(".interaction__from select")
+          .find("option")
+          .each((index, option) => {
+            const address = $(option).text().split("(")[0];
+            if (address === selectedFromAddress) {
+              $(option).text(`${address}(${balance})`);
+            }
+          });
+        break;
+      }
       case "compileResult": {
         const { contracts } = payload;
 

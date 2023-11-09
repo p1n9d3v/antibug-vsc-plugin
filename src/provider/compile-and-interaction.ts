@@ -254,6 +254,18 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
               }
             });
           }
+
+          const balance = await this.node.getBalance(
+            this.currentAccount.address
+          );
+          this.currentAccount.balance = balance.toString();
+          this.view?.webview.postMessage({
+            type: "changeAccountState",
+            payload: {
+              balance: this.currentAccount.balance,
+            },
+          });
+
           break;
         }
       }
