@@ -24,6 +24,7 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
     privateKey: DEFAULT_ACCOUNTS[0].privateKey,
     balance: DEFAULT_ACCOUNTS[0].balance.toString(),
   };
+  public value: string = "0";
 
   constructor({
     extensionUri,
@@ -129,6 +130,11 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
 
           break;
         }
+        case "changeValue": {
+          const { value } = payload;
+          this.value = value;
+          break;
+        }
         case "compile": {
           const { file } = payload;
           let compileFilePath = "";
@@ -165,7 +171,7 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
           break;
         }
         case "deploy": {
-          const { gasLimit, fromPrivateKey, value, contract, deployArguments } =
+          const { gasLimit, fromPrivateKey, contract, deployArguments } =
             payload;
           const latestBlock = this.node.getLatestBlock();
           const estimatedGasLimit = this.node.getEstimatedGasLimit(latestBlock); // 추후 필요할듯
@@ -179,9 +185,10 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
           ).slice(2);
 
           const callData = bytecodes.concat(data);
+
           const txData = {
             to: undefined,
-            value: bigIntToHex(BigInt(value)),
+            value: bigIntToHex(BigInt(this.value)),
             maxFeePerGas: baseFee,
             gasLimit: bigIntToHex(BigInt(gasLimit)),
             nonce: await this.node.getNonce(fromPrivateKey),
@@ -216,6 +223,39 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
                       abis: abisWithoutConstructor,
                     },
                   });
+                  break;
+                }
+                case "send": {
+                  const { functionName, arguments: args, value } = payload;
+                  const latestBlock = this.node.getLatestBlock();
+                  const estimatedGasLimit =
+                    this.node.getEstimatedGasLimit(latestBlock);
+                  const baseFee = latestBlock.header.calcNextBaseFee();
+
+                  const callData = encodeCallData(
+                    abis.map((abi: any) => abi.signature),
+                    functionName,
+                    args
+                  );
+
+                  const txData = {
+                    to: contractAddress,
+                    value: bigIntToHex(BigInt(value)),
+                    maxFeePerGas: baseFee,
+                    gasLimit: bigIntToHex(BigInt(estimatedGasLimit)),
+                    nonce: await this.node.getNonce(fromPrivateKey),
+                    data: callData,
+                  };
+
+                  const tx = FeeMarketEIP1559Transaction.fromTxData(
+                    txData
+                  ).sign(hexToBytes(this.currentAccount.privateKey));
+
+                  const { receipt } = await this.node.mine(tx);
+                  console.log(
+                    "result",
+                    bytesToHex(receipt.execResult.returnValue).toString()
+                  );
                   break;
                 }
                 case "call": {

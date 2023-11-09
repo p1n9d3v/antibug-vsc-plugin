@@ -55,6 +55,7 @@ const oldState = vscode.getState();
                 contractAddress,
                 functionName: abi.name,
                 arguments: resultArguments,
+                value: 0,
               },
             });
           });

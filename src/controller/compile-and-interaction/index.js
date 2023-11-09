@@ -2,7 +2,7 @@ const vscode = acquireVsCodeApi();
 const oldState = vscode.getState();
 
 (function () {
-  let selectedFromAddress = "";
+  let currentAccount = {};
   let selectedContract = {};
   $(window).ready(() => {
     vscode.postMessage({
@@ -26,7 +26,11 @@ const oldState = vscode.getState();
     const optionElement = $(event.target).find(`option[value="${privateKey}"]`);
     const address = optionElement.text().split("(")[0];
     const balance = optionElement.text().split("(")[1].split(")")[0];
-    selectedFromAddress = address;
+    currentAccount = {
+      address,
+      privateKey,
+      balance,
+    };
 
     vscode.postMessage({
       type: "changeAccount",
@@ -39,7 +43,39 @@ const oldState = vscode.getState();
   });
 
   $(".interaction__from .copy").click(() => {
-    navigator.clipboard.writeText(selectedFromAddress);
+    console.log(currentAccount.address);
+    navigator.clipboard.writeText(currentAccount.address);
+  });
+
+  $(".interaction__value-amount").change(() => {
+    let value = $(".interaction__value-amount input").val();
+    const regex = /^[0-9]*$/;
+    if (!regex.test(value)) {
+      value = "0";
+      $(".interaction__value-amount input").val("0");
+      return;
+    }
+    if (Number(value) > Number(currentAccount.balance)) {
+      return;
+    }
+    const type = $(".interaction__value-amount select").val();
+    switch (type) {
+      case "eth": {
+        value = String(Number(value) * 10 ** 18);
+        break;
+      }
+      case "gwei": {
+        value = String(Number(value) * 10 ** 9);
+        break;
+      }
+    }
+
+    vscode.postMessage({
+      type: "changeValue",
+      payload: {
+        value,
+      },
+    });
   });
 
   $(".deploy__run-show-arguments").click(() => {
@@ -120,7 +156,11 @@ const oldState = vscode.getState();
           $(".interaction__from select").append(optionElement);
         });
 
-        selectedFromAddress = accounts[0].address;
+        currentAccount = {
+          address: accounts[0].address,
+          privateKey: accounts[0].privateKey,
+          balance: accounts[0].balance,
+        };
 
         break;
       }
