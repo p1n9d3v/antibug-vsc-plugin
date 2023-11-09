@@ -25,7 +25,17 @@ const oldState = vscode.getState();
     const privateKey = event.target.value;
     const optionElement = $(event.target).find(`option[value="${privateKey}"]`);
     const address = optionElement.text().split("(")[0];
+    const balance = optionElement.text().split("(")[1].split(")")[0];
     selectedFromAddress = address;
+
+    vscode.postMessage({
+      type: "changeAccount",
+      payload: {
+        address,
+        privateKey,
+        balance,
+      },
+    });
   });
 
   $(".interaction__from .copy").click(() => {

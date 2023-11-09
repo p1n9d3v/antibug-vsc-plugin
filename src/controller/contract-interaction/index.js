@@ -20,6 +20,18 @@ const oldState = vscode.getState();
         abis.forEach((abi) => {
           const functionElement = $(makeFunctionElement(abi));
 
+          functionElement.find(".function__interaction input").change(() => {
+            functionElement
+              .find(".function__arguments input")
+              .each((index, input) => {
+                input.value = "";
+              });
+          });
+
+          functionElement.find(".function__arguments input").change(() => {
+            functionElement.find(".function__interaction input").val("");
+          });
+
           functionElement.find("button").click(() => {
             const ineractionInput = functionElement
               .find(".function__interaction input")
@@ -29,10 +41,14 @@ const oldState = vscode.getState();
               .map((index, input) => input.value)
               .toArray();
 
-            const resultArguments =
-              argumentsInput.length > 0 ? argumentsInput : ineractionInput;
+            const resultArguments = ineractionInput
+              ? ineractionInput
+              : argumentsInput;
 
-            const type = abi.stateMutability === "view" ? "call" : "send";
+            const type =
+              abi.stateMutability === "view" || abi.stateMutability === "pure"
+                ? "call"
+                : "send";
             vscode.postMessage({
               type,
               payload: {

@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
+
 import WebviewProvider from "./webview";
 import AntiBlockNode from "../blockchain/node";
 
@@ -8,17 +9,21 @@ import { exec } from "child_process";
 import { encodeCallData, makeABI } from "../util";
 import { DEFAULT_ACCOUNTS } from "../util/config";
 import { v4 as uuidv4 } from "uuid";
-import {
-  bigIntToHex,
-  bytesToHex,
-  hexToBytes,
-  intToHex,
-} from "@ethereumjs/util";
+import { bigIntToHex, bytesToHex, hexToBytes } from "@ethereumjs/util";
 import { FeeMarketEIP1559Transaction } from "@ethereumjs/tx";
 import ContractInteractionWebviewPanelProvider from "./contract-interaction";
 
 export default class CompileAndInteractionViewProvider extends WebviewProvider {
   public node!: AntiBlockNode;
+  public currentAccount: {
+    address: string;
+    privateKey: string;
+    balance: string;
+  } = {
+    address: DEFAULT_ACCOUNTS[0].address,
+    privateKey: DEFAULT_ACCOUNTS[0].privateKey,
+    balance: DEFAULT_ACCOUNTS[0].balance.toString(),
+  };
 
   constructor({
     extensionUri,
@@ -114,6 +119,16 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
           });
           break;
         }
+        case "changeAccount": {
+          const { address, privateKey, balance } = payload;
+          this.currentAccount = {
+            address,
+            privateKey,
+            balance,
+          };
+
+          break;
+        }
         case "compile": {
           const { file } = payload;
           let compileFilePath = "";
@@ -204,40 +219,40 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
                   break;
                 }
                 case "call": {
+                  const { functionName, arguments: args } = payload;
+                  const latestBlock = this.node.getLatestBlock();
+                  const estimatedGasLimit =
+                    this.node.getEstimatedGasLimit(latestBlock);
+                  const baseFee = latestBlock.header.calcNextBaseFee();
+
+                  const callData = encodeCallData(
+                    abis.map((abi: any) => abi.signature),
+                    functionName,
+                    args
+                  );
+
+                  const txData = {
+                    to: contractAddress,
+                    value: bigIntToHex(0n),
+                    maxFeePerGas: baseFee,
+                    gasLimit: bigIntToHex(BigInt(estimatedGasLimit)),
+                    nonce: await this.node.getNonce(fromPrivateKey),
+                    data: callData,
+                  };
+
+                  const tx = FeeMarketEIP1559Transaction.fromTxData(
+                    txData
+                  ).sign(hexToBytes(this.currentAccount.privateKey));
+
+                  const result = await this.node.runTx({ tx });
+                  console.log(
+                    "result",
+                    bytesToHex(result.execResult.returnValue).toString()
+                  );
                   break;
                 }
               }
             });
-
-            // Call
-            // const latestBlock = this.node.getLatestBlock();
-            // const estimatedGasLimit =
-            //   this.node.getEstimatedGasLimit(latestBlock); // 추후 필요할듯
-            // const baseFee = latestBlock.header.calcNextBaseFee();
-
-            // const callData = encodeCallData(
-            //   abis.map((abi: any) => abi.signature),
-            //   "name",
-            //   []
-            // );
-            // const txData = {
-            //   to: contractAddress,
-            //   value: bigIntToHex(0n),
-            //   maxFeePerGas: baseFee,
-            //   gasLimit: bigIntToHex(BigInt(estimatedGasLimit)),
-            //   nonce: await this.node.getNonce(fromPrivateKey),
-            //   data: callData,
-            // };
-
-            // const tx = FeeMarketEIP1559Transaction.fromTxData(txData).sign(
-            //   hexToBytes(fromPrivateKey)
-            // );
-
-            // const result = await this.node.runTx({ tx });
-            // console.log(
-            //   "result",
-            //   bytesToHex(result.execResult.returnValue).toString()
-            // );
           }
           break;
         }
