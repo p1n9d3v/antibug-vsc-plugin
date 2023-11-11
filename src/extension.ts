@@ -15,6 +15,8 @@ export async function activate(context: vscode.ExtensionContext) {
     extensionUri: context.extensionUri,
     viewType: "antiblock.security-analysis",
   });
+  // information message
+  
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(

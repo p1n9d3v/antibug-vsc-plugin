@@ -153,4 +153,3 @@ export default class AntiBlockNode {
     return this.blockchain.getLatestBlock();
   }
 }
-

@@ -13,7 +13,10 @@ const oldState = vscode.getState();
   window.addEventListener("message", ({ data: { type, payload } }) => {
     switch (type) {
       case "init": {
-        const { contractAddress, abis } = payload;
+        const {
+          contract: { name, address, balance },
+          abis,
+        } = payload;
         const functionsElement = $(".functions");
         functionsElement.empty();
 
@@ -42,7 +45,7 @@ const oldState = vscode.getState();
               .toArray();
 
             const resultArguments = ineractionInput
-              ? ineractionInput
+              ? ineractionInput.split(",").map((input) => input.trim())
               : argumentsInput;
 
             const type =
@@ -52,13 +55,14 @@ const oldState = vscode.getState();
             vscode.postMessage({
               type,
               payload: {
-                contractAddress,
+                address,
                 functionName: abi.name,
                 arguments: resultArguments,
-                value: 0,
               },
             });
           });
+          $(".contract__address").text(address);
+          $(".contract__balance").text(balance);
 
           functionsElement.append(functionElement);
         });
@@ -67,6 +71,11 @@ const oldState = vscode.getState();
         interactionButtonAnimation();
 
         break;
+      }
+      case "changeContractBalance": {
+        const { balance } = payload;
+
+        $(".contract__balance").text(balance);
       }
     }
   });
@@ -98,7 +107,6 @@ function makeFunctionElement(abi) {
   const inputs = abi.inputs
     .map((input) => `${input.type} ${input.name}`)
     .join(", ");
-  console.log(inputs);
   return `
     <div class="function">
       <div class="function__interaction">

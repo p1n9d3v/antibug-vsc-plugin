@@ -124,6 +124,14 @@ const oldState = vscode.getState();
         deployArguments,
       },
     });
+
+    $(".interaction__value-amount input").val("0");
+    vscode.postMessage({
+      type: "changeValue",
+      payload: {
+        value: "0",
+      },
+    });
   });
 
   $(".deploy__info-abi").click(() => {
@@ -148,53 +156,43 @@ const oldState = vscode.getState();
           $(".compile__files select").append(optionElement);
         });
 
-        accounts.forEach(({ address, balance, privateKey }) => {
-          const optionElement = $("<option></option>");
-          optionElement.val(privateKey);
-          optionElement.text(`${address}(${balance})`);
-
-          $(".interaction__from select").append(optionElement);
-        });
-
-        currentAccount = {
-          address: accounts[0].address,
-          privateKey: accounts[0].privateKey,
-          balance: accounts[0].balance,
-        };
+        setAccounts(accounts);
 
         break;
       }
       case "changeAccountState": {
-        const { balance } = payload;
-        $(".interaction__from select")
-          .find("option")
-          .each((index, option) => {
-            const address = $(option).text().split("(")[0];
-            if (address === selectedFromAddress) {
-              $(option).text(`${address}(${balance})`);
-            }
-          });
+        const { accounts } = payload;
+        setAccounts(accounts);
         break;
       }
       case "compileResult": {
         const { contracts } = payload;
+        if (contracts) {
+          const contractNames = Object.keys(contracts);
+          const contractsSelectElement = $(".deploy__contracts select");
+          contractsSelectElement.empty();
 
-        const contractNames = Object.keys(contracts);
-        const contractsSelectElement = $(".deploy__contracts select");
-        contractsSelectElement.empty();
+          contractNames.forEach((contractName) => {
+            const optionElement = $("<option></option>");
+            optionElement.val(
+              JSON.stringify({
+                name: contractName,
+                ...contracts[contractName],
+              })
+            );
+            optionElement.text(contractName);
 
-        contractNames.forEach((contractName) => {
-          const optionElement = $("<option></option>");
-          optionElement.val(JSON.stringify(contracts[contractName]));
-          optionElement.text(contractName);
+            contractsSelectElement.append(optionElement);
+          });
 
-          contractsSelectElement.append(optionElement);
-        });
+          selectedContract = {
+            name: contractNames[0],
+            ...contracts[contractNames[0]],
+          };
 
-        selectedContract = contracts[contractNames[0]];
-
-        changeDeployButtonColor(selectedContract);
-        makeContractArgumentsView(selectedContract);
+          changeDeployButtonColor(selectedContract);
+          makeContractArgumentsView(selectedContract);
+        }
 
         $(".compile__run").removeClass("loading");
         break;
@@ -250,5 +248,26 @@ const oldState = vscode.getState();
         .removeClass("fa-chevron-down")
         .addClass("fa-minus");
     }
+  }
+
+  function setAccounts(accounts) {
+    const fromSelectElement = $(".interaction__from-list select");
+
+    fromSelectElement.empty();
+    accounts.forEach(({ address, balance, privateKey }) => {
+      const optionElement = $("<option></option>");
+      optionElement.val(privateKey);
+      optionElement.text(`${address}(${balance})`);
+
+      fromSelectElement.append(optionElement);
+    });
+    if (Object.keys(currentAccount).length === 0) {
+      currentAccount = {
+        address: accounts[0].address,
+        privateKey: accounts[0].privateKey,
+        balance: accounts[0].balance,
+      };
+    }
+    fromSelectElement.val(currentAccount.privateKey);
   }
 })();
