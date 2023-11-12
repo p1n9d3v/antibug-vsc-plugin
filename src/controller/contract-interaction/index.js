@@ -8,6 +8,10 @@ const oldState = vscode.getState();
     });
   });
 
+  $(".result__info-title").click(() => {
+    $(".result__info-data").toggle("hidden");
+    $(".result__info-title .fa-chevron-down").toggleClass("rotate");
+  });
   // 솔직히 없어도 됌 ㅋㅋ 걍재미로 넣어봄
 
   window.addEventListener("message", ({ data: { type, payload } }) => {
@@ -61,8 +65,8 @@ const oldState = vscode.getState();
               },
             });
           });
-          $(".contract__address").text(address);
-          $(".contract__balance").text(balance);
+          $(".contract__address").text(`Address: ${address}`);
+          $(".contract__balance").text(`Balance: ${balance}`);
 
           functionsElement.append(functionElement);
         });
@@ -76,6 +80,19 @@ const oldState = vscode.getState();
         const { balance } = payload;
 
         $(".contract__balance").text(balance);
+        break;
+      }
+
+      case "transactionResult": {
+        const {
+          amountSpent,
+          totalSpent,
+          from,
+          to,
+          executedGasUsed,
+          decodeInput,
+        } = payload;
+        break;
       }
     }
   });
@@ -87,7 +104,9 @@ function interactionButtonAnimation() {
     element = $(element);
     element.find(".function__show-arguments").click(() => {
       element.find(".function__arguments").toggleClass("hidden");
-
+      element
+        .find(".function__show-arguments .fa-chevron-down")
+        .toggleClass("rotate");
       const argumentsElement = element.find(".function__arguments");
       if (
         argumentsElement.length > 0 &&
@@ -112,9 +131,14 @@ function makeFunctionElement(abi) {
       <div class="function__interaction">
         <button class=${abi.stateMutability}>${abi.name}</button>
         ${abi.inputs.length > 0 ? `<input  placeholder="${inputs}"/>` : ""}
-        <div class="function__show-arguments">
-          ${abi.inputs.length > 1 ? `<i class="fa fa-chevron-down"></i>` : ""}
-        </div>
+          ${
+            abi.inputs.length > 1
+              ? `
+          <div class="function__show-arguments">
+            <i class="fa fa-chevron-down"></i>
+          </div>`
+              : ""
+          }
       </div>
       ${
         abi.inputs.length > 0

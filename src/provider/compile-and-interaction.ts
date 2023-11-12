@@ -269,25 +269,26 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
                     bytesToHex(receipt.execResult.returnValue).toString()
                   );
 
-                  console.log(
-                    "contract balance",
-                    await this.node.getBalance(contractAddress)
+                  const amountSpent = receipt.amountSpent.toString();
+                  const totalSpent = receipt.totalGasSpent.toString();
+                  const from =
+                    receipt.execResult.runState?.env.caller.toString();
+                  const to =
+                    receipt.execResult.runState?.env.address.toString();
+                  const executedGasUsed =
+                    receipt.execResult.executionGasUsed.toString();
+                  const decodeInput = iface.decodeFunctionData(
+                    functionName,
+                    receipt.execResult.runState?.env.callData as any
                   );
-                  console.log(
-                    "account balance",
-                    await this.node.getBalance(this.currentAccount.address)
-                  );
+                  const txHash = tx.hash().toString();
 
-                  console.log(
-                    "dump",
-                    await receipt.execResult.runState?.stateManager.dumpStorage(
-                      Address.fromString(contractAddress)
-                    )
-                  );
-                  console.log(
-                    "stack",
-                    receipt.execResult.runState?.stateManager.shallowCopy()
-                  );
+                  console.log("amountSpent", amountSpent);
+                  console.log("totalSpent", totalSpent);
+                  console.log("from", from);
+                  console.log("to", to);
+                  console.log("executedGasUsed", executedGasUsed);
+                  console.log("decodeInput", decodeInput);
 
                   const balance = (
                     await this.node.getBalance(contractAddress)
@@ -298,7 +299,23 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
                       balance,
                     },
                   });
+
                   await this.changeAccountState();
+
+                  panelProvider.panel.webview.postMessage({
+                    type: "transactionResult",
+                    payload: {
+                      txHash,
+                      amountSpent,
+                      totalSpent,
+                      from,
+                      to,
+                      executedGasUsed,
+                      decodeInput,
+                    },
+                  });
+
+                  console.log(receipt);
 
                   // get Text from result
 
@@ -332,6 +349,7 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
                     "result",
                     bytesToHex(result.execResult.returnValue).toString()
                   );
+
                   break;
                 }
               }
