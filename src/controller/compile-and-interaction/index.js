@@ -37,6 +37,7 @@ const oldState = vscode.getState();
     const optionElement = $(event.target).find(`option[value="${privateKey}"]`);
     const address = optionElement.text().split("(")[0];
     const balance = optionElement.text().split("(")[1].split(")")[0];
+
     currentAccount = {
       address,
       privateKey,

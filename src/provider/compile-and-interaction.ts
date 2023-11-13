@@ -5,13 +5,12 @@ import * as path from "path";
 import WebviewProvider from "./webview";
 import AntiBlockNode from "../blockchain/node";
 
+import ContractInteractionWebviewPanelProvider from "./contract-interaction";
 import { exec } from "child_process";
-import { encodeCallData, makeABI } from "../util";
 import { DEFAULT_ACCOUNTS } from "../util/config";
 import { v4 as uuidv4 } from "uuid";
-import { Address, bigIntToHex, bytesToHex, hexToBytes } from "@ethereumjs/util";
+import { bigIntToHex, bytesToHex, hexToBytes } from "@ethereumjs/util";
 import { FeeMarketEIP1559Transaction } from "@ethereumjs/tx";
-import ContractInteractionWebviewPanelProvider from "./contract-interaction";
 import { Interface, FormatTypes } from "ethers/lib/utils";
 
 export default class CompileAndInteractionViewProvider extends WebviewProvider {
