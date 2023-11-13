@@ -2,6 +2,8 @@ import * as vscode from "vscode";
 import * as ejs from "ejs";
 import * as fs from "fs";
 
+// primary sidebar web view class
+// 부모역할을
 export default class WebviewProvider implements vscode.WebviewViewProvider {
   public view?: vscode.WebviewView;
   public extensionUri: vscode.Uri;
@@ -17,6 +19,7 @@ export default class WebviewProvider implements vscode.WebviewViewProvider {
     this.viewType = viewType;
   }
 
+  // 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
     context: vscode.WebviewViewResolveContext<unknown>,

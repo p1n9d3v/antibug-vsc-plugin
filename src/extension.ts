@@ -16,7 +16,6 @@ export async function activate(context: vscode.ExtensionContext) {
     viewType: "antiblock.security-analysis",
   });
   // information message
-  
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
@@ -29,6 +28,8 @@ export async function activate(context: vscode.ExtensionContext) {
     )
   );
 }
+
+// 정수가 들어와야하잖아
 
 // This method is called when your extension is deactivated
 export function deactivate() {}

@@ -40,9 +40,7 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
       extensionUri,
       viewType,
     });
-    (async () => {
-      this.node = antibugNode;
-    })();
+    this.node = antibugNode;
   }
 
   public resolveWebviewView(
@@ -135,6 +133,15 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
         case "changeValue": {
           const { value } = payload;
           this.value = value;
+          break;
+        }
+        case "changeFile": {
+          const { path } = payload;
+          const file = await vscode.workspace.openTextDocument(path);
+          await vscode.window.showTextDocument(file, {
+            preview: false,
+            viewColumn: vscode.ViewColumn.One,
+          });
           break;
         }
         case "compile": {
@@ -403,7 +410,12 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
         if (error) {
           console.error(`exec error: ${error}`);
           vscode.window
-            .showInformationMessage(error.message, "확인", "취소")
+            .showInformationMessage(
+              error.message,
+              "확인",
+              "취소",
+              "dkdkdkdkdkkdkdk"
+            )
             .then((value) => {
               if (value === "확인") {
                 vscode.commands.executeCommand(

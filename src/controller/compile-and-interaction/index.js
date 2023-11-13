@@ -4,6 +4,7 @@ const oldState = vscode.getState();
 (function () {
   let currentAccount = {};
   let selectedContract = {};
+
   $(window).ready(() => {
     vscode.postMessage({
       type: "init",
@@ -17,6 +18,16 @@ const oldState = vscode.getState();
       type: "compile",
       payload: {
         file: selectedSolFile,
+      },
+    });
+  });
+
+  $(".compile__files select").change((event) => {
+    const path = event.target.value;
+    vscode.postMessage({
+      type: "changeFile",
+      payload: {
+        path,
       },
     });
   });
@@ -138,6 +149,7 @@ const oldState = vscode.getState();
     if (Object.keys(selectedContract).length === 0) return;
     navigator.clipboard.writeText(JSON.stringify(selectedContract.abis));
   });
+
   $(".deploy__info-bytecodes").click(() => {
     if (Object.keys(selectedContract).length === 0) return;
     navigator.clipboard.writeText(selectedContract.bytecodes);

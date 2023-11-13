@@ -7,20 +7,20 @@
   <body>
     <%- include('seperator.ejs',{text: "Compile"}) %>
     <!-- COMPILE START-->
-    <%-include('compile.ejs') %>
+    <%- include('compile.ejs') %>
     <!-- COMPILE END -->
 
     <%- include('seperator.ejs',{text: "Interaction"}) %>
     <!-- INTERACTION START-->
-    <%-include('interaction.ejs') %>
+    <%- include('interaction.ejs') %>
     <!-- INTERACTION END -->
 
     <%- include('seperator.ejs',{text: "Deploy"}) %>
     <!-- DEPLOY START-->
-    <%-include('deploy.ejs') %>
+    <%- include('deploy.ejs') %>
     <!-- DEPLOY END -->
 
     <!-- SCRIPTS -->
-    <%-include('scripts.ejs') %>
+    <%- include('scripts.ejs') %>
   </body>
 </html>
