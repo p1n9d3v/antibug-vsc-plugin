@@ -1,28 +1,32 @@
 .rule__list,
 .print__list {
-  max-height: 300px;
-
+  height:75vh;
+  max-height: 80%;
   overflow-y: scroll;
   scroll-behavior: smooth;
-
   display: flex;
   flex-direction: column;
   gap: 8px;
-
   padding: 8px 8px 0;
 }
-.similarity {
+/* .similarity {
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
+} */
+
+
 .audit-report {
   background: var(--button-background-tertiary);
-}
-.similarity button {
   margin-top: 8px;
-  background: var(--button-background-primary);
+
 }
+
+.security-analysis {
+  background: var(--button-background-primary);
+  margin-top: 10px;
+}
+
 /* CHECKBOX START */
 .rule__button {
   display: block;
@@ -33,6 +37,7 @@
   -ms-user-select: none;
   user-select: none;
 }
+
 .rule__button input {
   position: absolute;
   opacity: 0;

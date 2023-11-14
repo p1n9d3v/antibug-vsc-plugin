@@ -5,7 +5,6 @@
     <title>Security Analysis</title>
   </head>
   <body>
-    <button class="audit-report">Audit Report</button>
     <%- include('seperator.ejs',{text: "Application Rule"}) %>
     <div class="rule">
       <div class="rule__list">
@@ -14,17 +13,19 @@
         function(value){ %> <%- include('checkbox', { text: value }) %> <% });
         %>
       </div>
+      <button class="security-analysis">Analysis</button>
+      <button class="audit-report">Audit Report</button>
     </div>
 
-    <%- include('seperator.ejs',{text: "Print Type"}) %>
+    <!-- <%- include('seperator.ejs',{text: "Print Type"}) %>
     <div class="print">
       <div class="print__list">
         <% ['Graph','Detail','Sumary'].forEach( function(value){ %> <%-
         include('checkbox', { text: value }) %> <% }); %>
       </div>
-    </div>
+    </div> -->
 
-    <%- include('seperator.ejs',{text: "Similarity Detection"}) %>
+    <!-- <%- include('seperator.ejs',{text: "Similarity Detection"}) %>
 
     <div class="similarity">
       <div>
@@ -40,7 +41,7 @@
         <input type="text" />
       </div>
       <button>Analysis</button>
-    </div>
+    </div> -->
 
     <!-- SCRIPTS -->
     <%-include('scripts.ejs') %>
