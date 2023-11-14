@@ -5,63 +5,28 @@
     <title>Security Analysis</title>
   </head>
   <body>
-<<<<<<< Updated upstream
-    <%- include('seperator.ejs',{text: "Application Rule"}) %>
-=======
+    <%- include('seperator.ejs',{text: "Select File"}) %>
     <div class="analysis__files">
-      <p class="input-title">File Path</p>
       <select></select>
     </div>
     <%- include('seperator.ejs',{text: "Select Rule"}) %>
->>>>>>> Stashed changes
     <div class="rule">
       <div class="rule__list">
         <%
         ['Reentrancy','tx-origin','Delegate-call','Owner','Bad-Randomness','Visibility','Self-Destructor'].forEach(
-        function(value){ %> <%- include('checkbox', { text: value }) %> <% });
-        %>
+        function(value){ %> <%- include('checkbox', { text: value, value: value
+        }) %> <% }); %>
       </div>
-      <button class="security-analysis">Analysis</button>
-      <button class="audit-report">Audit Report</button>
     </div>
     <%- include('seperator.ejs',{text: "Select Language"}) %>
     <div class="language">
       <div class="language__list">
-        <%
-        ['Korean','English'].forEach(
-        function(value){ %> <%- include('checkbox', { text: value }) %> <% });
-        %>
+        <% ['Korean', 'English'].forEach(function(value){ %> <%-
+        include('checkbox', { text: value, value: value}) %> <% }); %>
       </div>
-
-<<<<<<< Updated upstream
-    <!-- <%- include('seperator.ejs',{text: "Print Type"}) %>
-    <div class="print">
-      <div class="print__list">
-        <% ['Graph','Detail','Sumary'].forEach( function(value){ %> <%-
-        include('checkbox', { text: value }) %> <% }); %>
-      </div>
-    </div> -->
-
-    <!-- <%- include('seperator.ejs',{text: "Similarity Detection"}) %>
-
-    <div class="similarity">
-      <div>
-        <p class="input-title">File Path</p>
-        <select></select>
-      </div>
-      <div>
-        <p class="input-title">Contract Name</p>
-        <input type="text" />
-      </div>
-      <div>
-        <p class="input-title">Function Name</p>
-        <input type="text" />
-      </div>
-      <button>Analysis</button>
-    </div> -->
-=======
+    </div>
     <button class="analysis__run">Analysis</button>
->>>>>>> Stashed changes
+    <button class="audit-report">Audit Report</button>
 
     <!-- SCRIPTS -->
     <%-include('scripts.ejs') %>

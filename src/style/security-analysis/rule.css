@@ -1,40 +1,24 @@
 .rule__list,
-<<<<<<< Updated upstream
-.print__list {
-  height:75vh;
-  max-height: 80%;
-=======
+.print__list,
 .language__list {
   max-height: 300px;
-
->>>>>>> Stashed changes
+  /* height: 75vh; */
+  max-height: 80%;
   overflow-y: scroll;
   scroll-behavior: smooth;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 8px 8px 0;
+  padding: 0px 8px 0;
 }
-<<<<<<< Updated upstream
-/* .similarity {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-} */
-
 
 .audit-report {
   background: var(--button-background-tertiary);
-  margin-top: 8px;
-
+  margin-top: 14px;
 }
 
-.security-analysis {
-  background: var(--button-background-primary);
-  margin-top: 10px;
-=======
 .analysis__run {
-  position: relative;
+  margin-top: 18px;
   background: var(--button-background-primary);
 }
 
@@ -59,7 +43,6 @@
   to {
     transform: rotate(360deg);
   }
->>>>>>> Stashed changes
 }
 
 /* CHECKBOX START */

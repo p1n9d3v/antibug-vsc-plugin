@@ -9,16 +9,30 @@ const oldState = vscode.getState();
   });
 
   $(".analysis__run").click(() => {
-    // $(".analysis__run").addClass("loading");
-    const selectedLanguage = $(".language input:checked").val();
+    const selectedLanguages = [];
+    $(".language__list input[name=checkbox]:checked").each(function () {
+      const value = $(this).siblings(".rule__text").text();
+      selectedLanguages.push(value);
+    });
     const selectedSolFile = $(".analysis__files select").val();
-    const selectedRule = $(".rule input:checked").val();
+    const selectedRules = [];
+    $(".rule__list input[name=checkbox]:checked").each(function () {
+      const value = $(this).siblings(".rule__text").text();
+      selectedRules.push(value);
+    });
+
+    const languagesString = selectedLanguages.join(" ");
+    const rulesString = selectedRules.join(" ");
+
+    console.log(selectedSolFile);
+    console.log(languagesString);
+    console.log(rulesString);
 
     vscode.postMessage({
       type: "analysis",
       payload: {
-        selectedLanguage,
-        selectedRule,
+        selectedLanguages: languagesString,
+        selectedRules: rulesString,
         selectedSolFile,
       },
     });

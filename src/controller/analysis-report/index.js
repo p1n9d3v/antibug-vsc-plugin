@@ -17,6 +17,7 @@ const oldState = vscode.getState();
       case "printResult": {
         const { result } = payload;
         const resultElement = document.getElementsByClassName("result");
+
         break;
       }
     }

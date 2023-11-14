@@ -405,7 +405,7 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
     message: string;
   }> {
     return new Promise((resolve, reject) => {
-      exec(`antibug compile ${filePath}`, (error, stdout, stderr) => {
+      exec(`antibug deploy ${filePath}`, (error, stdout, stderr) => {
         if (error) {
           console.error(`exec error: ${error}`);
           vscode.window

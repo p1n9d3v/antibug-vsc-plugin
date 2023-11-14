@@ -103,26 +103,25 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
 
         case "analysis": {
           const { language, rule, path } = payload;
-          const filePath = await this.generateEditFile(path);
 
-          const stdout = await this.analysis(language, rule, filePath);
+          // const stdout = await this.analysis(language, rule, path);
 
-          // const jsonFile = this.getJsonFileFromStdout(stdout.message, filePath);
+          // const jsonFile = this.getJsonFileFromStdout(stdout.message, path);
 
-          const panelProvider = new SecurityAnalysisWebviewPanelProvider({
-            extensionUri: this.extensionUri,
-            viewType: "antiblock.analysis-report",
-            title: filePath,
-            column: vscode.ViewColumn.Beside,
-          });
+          // const panelProvider = new SecurityAnalysisWebviewPanelProvider({
+          //   extensionUri: this.extensionUri,
+          //   viewType: "antiblock.analysis-report",
+          //   title: path,
+          //   column: vscode.ViewColumn.Beside,
+          // });
 
-          panelProvider.render();
-          panelProvider.panel.webview.postMessage({
-            type: "printResult",
-            payload: {
-              stdout,
-            },
-          });
+          // panelProvider.render();
+          // panelProvider.panel.webview.postMessage({
+          //   type: "printResult",
+          //   payload: {
+          //     stdout,
+          //   },
+          // });
 
           break;
         }
