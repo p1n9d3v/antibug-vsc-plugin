@@ -64,6 +64,7 @@ const oldState = vscode.getState();
                 arguments: resultArguments,
               },
             });
+            changeContractBalance;
           });
           $(".contract__address").text(`Address: ${address}`);
           $(".contract__balance").text(`Balance: ${balance}`);

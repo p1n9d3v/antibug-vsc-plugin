@@ -409,12 +409,7 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
         if (error) {
           console.error(`exec error: ${error}`);
           vscode.window
-            .showInformationMessage(
-              error.message,
-              "확인",
-              "취소",
-              "dkdkdkdkdkkdkdk"
-            )
+            .showInformationMessage(error.message, "확인", "취소")
             .then((value) => {
               if (value === "확인") {
                 vscode.commands.executeCommand(

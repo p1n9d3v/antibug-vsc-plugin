@@ -5,7 +5,15 @@
     <title>Security Analysis</title>
   </head>
   <body>
+<<<<<<< Updated upstream
     <%- include('seperator.ejs',{text: "Application Rule"}) %>
+=======
+    <div class="analysis__files">
+      <p class="input-title">File Path</p>
+      <select></select>
+    </div>
+    <%- include('seperator.ejs',{text: "Select Rule"}) %>
+>>>>>>> Stashed changes
     <div class="rule">
       <div class="rule__list">
         <%
@@ -16,7 +24,16 @@
       <button class="security-analysis">Analysis</button>
       <button class="audit-report">Audit Report</button>
     </div>
+    <%- include('seperator.ejs',{text: "Select Language"}) %>
+    <div class="language">
+      <div class="language__list">
+        <%
+        ['Korean','English'].forEach(
+        function(value){ %> <%- include('checkbox', { text: value }) %> <% });
+        %>
+      </div>
 
+<<<<<<< Updated upstream
     <!-- <%- include('seperator.ejs',{text: "Print Type"}) %>
     <div class="print">
       <div class="print__list">
@@ -42,6 +59,9 @@
       </div>
       <button>Analysis</button>
     </div> -->
+=======
+    <button class="analysis__run">Analysis</button>
+>>>>>>> Stashed changes
 
     <!-- SCRIPTS -->
     <%-include('scripts.ejs') %>

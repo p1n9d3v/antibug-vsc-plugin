@@ -1,7 +1,13 @@
 .rule__list,
+<<<<<<< Updated upstream
 .print__list {
   height:75vh;
   max-height: 80%;
+=======
+.language__list {
+  max-height: 300px;
+
+>>>>>>> Stashed changes
   overflow-y: scroll;
   scroll-behavior: smooth;
   display: flex;
@@ -9,6 +15,7 @@
   gap: 8px;
   padding: 8px 8px 0;
 }
+<<<<<<< Updated upstream
 /* .similarity {
   display: flex;
   flex-direction: column;
@@ -25,6 +32,34 @@
 .security-analysis {
   background: var(--button-background-primary);
   margin-top: 10px;
+=======
+.analysis__run {
+  position: relative;
+  background: var(--button-background-primary);
+}
+
+.analysis__run.loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  margin: -16px;
+  border-radius: 50%;
+  border: 4px dotted #fff;
+  animation: spin 1s linear infinite;
+}
+
+.analysis__run.loading {
+  color: transparent;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+>>>>>>> Stashed changes
 }
 
 /* CHECKBOX START */
