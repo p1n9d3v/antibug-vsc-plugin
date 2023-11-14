@@ -13,7 +13,7 @@
     <div class="rule">
       <div class="rule__list">
         <%
-        ['Reentrancy','tx-origin','Delegate-call','Owner','Bad-Randomness','Visibility','Self-Destructor'].forEach(
+        ['Reentrancy','tx-origin','IncorrectReturn','Delegate-call','Owner','Bad-Randomness','Visibility','Self-Destructor'].forEach(
         function(value){ %> <%- include('checkbox', { text: value, value: value
         }) %> <% }); %>
       </div>

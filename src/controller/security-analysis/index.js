@@ -24,10 +24,6 @@ const oldState = vscode.getState();
     const languagesString = selectedLanguages.join(" ");
     const rulesString = selectedRules.join(" ");
 
-    console.log(selectedSolFile);
-    console.log(languagesString);
-    console.log(rulesString);
-
     vscode.postMessage({
       type: "analysis",
       payload: {

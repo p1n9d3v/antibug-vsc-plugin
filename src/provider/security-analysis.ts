@@ -102,11 +102,22 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
         }
 
         case "analysis": {
-          const { language, rule, path } = payload;
+          const { selectedLanguages, selectedRules, selectedSolFile } = payload;
+          console.log("sfkdjfkajfkjkdsjfkdsjfkadfkj");
+          console.log(selectedLanguages);
 
           // const stdout = await this.analysis(language, rule, path);
+          // const { message } = stdout;
 
-          // const jsonFile = this.getJsonFileFromStdout(stdout.message, path);
+          // const regex = /Not a directory: '(.*)'/;
+          // const match = message.match(regex);
+
+          // if (match) {
+          //   const pathValue = match[1];
+          //   console.log(pathValue);
+          // } else {
+          //   console.log("No match found.");
+          // }
 
           // const panelProvider = new SecurityAnalysisWebviewPanelProvider({
           //   extensionUri: this.extensionUri,
@@ -129,35 +140,6 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
     });
   }
 
-  private async generateEditFile(filePath: string) {
-    const fileData = await vscode.workspace.fs.readFile(
-      vscode.Uri.file(filePath)
-    );
-    const fileContent = Buffer.from(fileData).toString();
-
-    const EditFilePath = path.join(path.dirname(filePath), `${uuidv4()}.sol`);
-    fs.writeFileSync(EditFilePath, fileContent);
-
-    return EditFilePath;
-  }
-
-  private getJsonFileFromStdout(stdout: string, fileName: string) {
-    const directoryPath = stdout.split(":")[1].trim();
-    const jsonFileName = fileName
-      .split("/")
-      .pop()
-      ?.split(".")[0]
-      .concat(".json");
-
-    if (!jsonFileName) {
-      throw new Error("Invalid file name");
-    }
-
-    const jsonFilePath = path.join(directoryPath, jsonFileName);
-
-    return require(jsonFilePath);
-  }
-
   private async analysis(
     language: string,
     rule: string,
@@ -168,7 +150,7 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
   }> {
     return new Promise((resolve, reject) => {
       exec(
-        `antibug deploy ${language} ${rule} ${filePath}`,
+        `antibug detect ${language} ${rule} ${filePath}`,
         (error, stdout, stderr) => {
           if (error) {
             console.error(`exec error: ${error}`);
@@ -186,7 +168,6 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
             console.error(`stderr: ${stderr}`);
             vscode.window.showInformationMessage(stderr);
           }
-          fs.unlinkSync(filePath);
           return resolve({
             status: "success",
             message: stdout,
