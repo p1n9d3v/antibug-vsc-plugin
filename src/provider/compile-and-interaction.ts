@@ -385,6 +385,7 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
 
   private getJsonFileFromStdout(stdout: string, fileName: string) {
     const directoryPath = stdout.split(":")[1].trim();
+    console.log(fileName);
     const jsonFileName = fileName
       .split("/")
       .pop()

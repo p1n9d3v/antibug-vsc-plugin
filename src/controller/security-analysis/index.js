@@ -10,8 +10,8 @@ const oldState = vscode.getState();
 
   $(".analysis__run").click(() => {
     const selectedLanguages = [];
-    $(".language__list input[name=checkbox]:checked").each(function () {
-      const value = $(this).siblings(".rule__text").text();
+    $(".language__list input[name=language]:checked").each(function () {
+      const value = $(this).siblings(".language__text").text();
       selectedLanguages.push(value);
     });
 
@@ -51,6 +51,13 @@ const oldState = vscode.getState();
     }
   });
 
+  $(".audit-report").click(() => {
+    vscode.postMessage({
+      type: "auditReport",
+      payload: {},
+    });
+  });
+
   $(".analysis__files select").change((event) => {
     const path = event.target.value;
     vscode.postMessage({
@@ -76,7 +83,7 @@ const oldState = vscode.getState();
         break;
       }
 
-      case "analysisResult": {
+      case "": {
         const { result } = payload;
         break;
       }

@@ -10,6 +10,8 @@ import { v4 as uuidv4 } from "uuid";
 import { error } from "console";
 
 export default class SecurityAnalysisViewProvider extends WebviewProvider {
+  private auditReportPath?: string;
+
   constructor({
     extensionUri,
     viewType,
@@ -105,7 +107,26 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
         case "error": {
           const { errMsg } = payload;
           console.log(errMsg);
-          await vscode.window.showInformationMessage(errMsg);
+          vscode.window
+            .showInformationMessage(errMsg, "확인", "취소")
+            .then((value) => {
+              if (value === "확인") {
+                vscode.commands.executeCommand(
+                  "workbench.action.problems.focus"
+                );
+              }
+            });
+          break;
+        }
+
+        case "auditReport": {
+          if (this.auditReportPath) {
+            await this.generateMDView(this.auditReportPath);
+          } else {
+            await vscode.window.showErrorMessage(
+              "Please press the 'Analysis' button first."
+            );
+          }
         }
 
         case "analysis": {
@@ -134,41 +155,19 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
               detectResultMatch[1],
               Filename + ".json"
             );
-            const auditReportPath = path.join(
+            this.auditReportPath = path.join(
               auditReportMatch[1],
               Filename + ".md"
             );
 
-            await this.generateMDView(auditReportPath);
+            const panelProvider = new SecurityAnalysisWebviewPanelProvider({
+              extensionUri: this.extensionUri,
+              viewType: "antiblock.analysis-report",
+              title: Filename,
+              column: vscode.ViewColumn.Beside,
+            });
 
-            // const jsonData = fs.readFileSync(detectResultPath, "utf8");
-
-            // const panelProvider = new SecurityAnalysisWebviewPanelProvider({
-            //   extensionUri: this.extensionUri,
-            //   viewType: "antiblock.analysis-report",
-            //   title: result,
-            //   column: vscode.ViewColumn.Beside,
-            // });
-
-            // panelProvider.render();
-            // panelProvider.onDidReceiveMessage(async (data) => {
-            //   const { type, payload } = data;
-            //   switch (type) {
-            //     case "init": {
-            //       panelProvider.panel.webview.postMessage({
-            //         type: "init",
-            //         payload: {
-            //           jsonData,
-            //         },
-            //       });
-            //       break;
-            //     }
-            //   }
-            // });
-          } else {
-            await vscode.window.showInformationMessage(
-              "No vulnerabilities detected"
-            );
+            panelProvider.render();
           }
         }
       }
@@ -234,11 +233,10 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
 
       fs.writeFileSync(newFilePath, fileContent, "utf8");
 
-      const mdFile = await vscode.workspace.openTextDocument(newFilePath);
-      await vscode.window.showTextDocument(mdFile, {
-        preview: true,
-        viewColumn: vscode.ViewColumn.Beside,
-      });
+      vscode.commands.executeCommand(
+        "markdown.showPreviewToSide",
+        vscode.Uri.file(newFilePath)
+      );
     }
   }
 }

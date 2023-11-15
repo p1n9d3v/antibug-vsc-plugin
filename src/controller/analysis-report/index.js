@@ -11,8 +11,14 @@ const oldState = vscode.getState();
   window.addEventListener("message", ({ data: { type, payload } }) => {
     switch (type) {
       case "init": {
-        const { jsonData, mdData } = payload;
-        console.log(jsonData);
+        const { detectResultPath } = payload;
+        jsonData = fs.readFileSync(detectResultPath, "utf8");
+        const resultElement = $(".analysis__result");
+
+        const parseData = JSON.parse(jsonData);
+        parseData.array.forEach((element) => {
+          resultElement.append(`<p>${element}</p>`);
+        });
         break;
       }
     }
