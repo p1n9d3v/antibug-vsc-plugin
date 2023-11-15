@@ -139,7 +139,9 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
               Filename + ".md"
             );
 
-            const jsonData = fs.readFileSync(detectResultPath, "utf8");
+            await this.generateMDView(auditReportPath);
+
+            // const jsonData = fs.readFileSync(detectResultPath, "utf8");
 
             // const panelProvider = new SecurityAnalysisWebviewPanelProvider({
             //   extensionUri: this.extensionUri,
@@ -163,6 +165,10 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
             //     }
             //   }
             // });
+          } else {
+            await vscode.window.showInformationMessage(
+              "No vulnerabilities detected"
+            );
           }
         }
       }
@@ -206,20 +212,33 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
     });
   }
 
-  private getJsonFileFromStdout(stdout: string, fileName: string) {
-    const directoryPath = stdout.split(":")[1];
-    const jsonFileName = fileName
-      .split("/")
-      .pop()
-      ?.split(".")[0]
-      .concat(".json");
+  private async generateMDView(filePath: string) {
+    const fileContent = fs.readFileSync(filePath, "utf8");
+    const workspaceFolders = vscode.workspace.workspaceFolders;
 
-    if (!jsonFileName) {
-      throw new Error("Invalid file name");
+    if (workspaceFolders && workspaceFolders.length > 0) {
+      const workspaceRoot = workspaceFolders[0].uri.fsPath;
+      const resultDir = path.join(workspaceRoot, "result");
+
+      if (!fs.existsSync(resultDir)) {
+        fs.mkdirSync(resultDir);
+      }
+
+      const fileNameWithoutExtension = path.basename(
+        filePath,
+        path.extname(filePath)
+      );
+      const newFileName = `${fileNameWithoutExtension}.md`;
+
+      const newFilePath = path.join(resultDir, newFileName);
+
+      fs.writeFileSync(newFilePath, fileContent, "utf8");
+
+      const mdFile = await vscode.workspace.openTextDocument(newFilePath);
+      await vscode.window.showTextDocument(mdFile, {
+        preview: true,
+        viewColumn: vscode.ViewColumn.Beside,
+      });
     }
-
-    const jsonFilePath = path.join(directoryPath, jsonFileName);
-
-    return require(jsonFilePath);
   }
 }
