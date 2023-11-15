@@ -14,6 +14,7 @@ const oldState = vscode.getState();
       const value = $(this).siblings(".rule__text").text();
       selectedLanguages.push(value);
     });
+
     const selectedSolFile = $(".analysis__files select").val();
     const selectedRules = [];
     $(".rule__list input[name=checkbox]:checked").each(function () {
@@ -21,17 +22,33 @@ const oldState = vscode.getState();
       selectedRules.push(value);
     });
 
-    const languagesString = selectedLanguages.join(" ");
-    const rulesString = selectedRules.join(" ");
+    if (selectedLanguages.length === 0) {
+      vscode.postMessage({
+        type: "error",
+        payload: {
+          errMsg: "Please select a language type.",
+        },
+      });
+    } else if (selectedRules.length === 0) {
+      vscode.postMessage({
+        type: "error",
+        payload: {
+          errMsg: "Please select one or more rules.",
+        },
+      });
+    } else {
+      const languagesString = selectedLanguages.join(" ");
+      const rulesString = selectedRules.join(" ");
 
-    vscode.postMessage({
-      type: "analysis",
-      payload: {
-        selectedLanguages: languagesString,
-        selectedRules: rulesString,
-        selectedSolFile,
-      },
-    });
+      vscode.postMessage({
+        type: "analysis",
+        payload: {
+          selectedLanguages: languagesString,
+          selectedRules: rulesString,
+          selectedSolFile,
+        },
+      });
+    }
   });
 
   $(".analysis__files select").change((event) => {

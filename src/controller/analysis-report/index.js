@@ -11,13 +11,8 @@ const oldState = vscode.getState();
   window.addEventListener("message", ({ data: { type, payload } }) => {
     switch (type) {
       case "init": {
-        break;
-      }
-
-      case "printResult": {
-        const { result } = payload;
-        const resultElement = document.getElementsByClassName("result");
-
+        const { jsonData, mdData } = payload;
+        console.log(jsonData);
         break;
       }
     }

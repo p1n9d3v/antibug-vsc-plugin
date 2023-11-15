@@ -7,6 +7,7 @@ import WebviewProvider from "./webview";
 import SecurityAnalysisWebviewPanelProvider from "./analysis-report";
 import { exec } from "child_process";
 import { v4 as uuidv4 } from "uuid";
+import { error } from "console";
 
 export default class SecurityAnalysisViewProvider extends WebviewProvider {
   constructor({
@@ -101,40 +102,68 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
           break;
         }
 
+        case "error": {
+          const { errMsg } = payload;
+          console.log(errMsg);
+          await vscode.window.showInformationMessage(errMsg);
+        }
+
         case "analysis": {
           const { selectedLanguages, selectedRules, selectedSolFile } = payload;
-          console.log("sfkdjfkajfkjkdsjfkdsjfkadfkj");
-          console.log(selectedLanguages);
 
-          // const stdout = await this.analysis(language, rule, path);
-          // const { message } = stdout;
+          const stdout = await this.analysis(
+            selectedLanguages,
+            selectedRules,
+            selectedSolFile
+          );
 
-          // const regex = /Not a directory: '(.*)'/;
-          // const match = message.match(regex);
+          const result = stdout.message;
+          const Filename = path.basename(
+            selectedSolFile,
+            path.extname(selectedSolFile)
+          );
 
-          // if (match) {
-          //   const pathValue = match[1];
-          //   console.log(pathValue);
-          // } else {
-          //   console.log("No match found.");
-          // }
+          const detectResultRegex = /Detect Result Output directory: (.+)/;
+          const auditReportRegex = /Audit Report Output directory: (.+)/;
 
-          // const panelProvider = new SecurityAnalysisWebviewPanelProvider({
-          //   extensionUri: this.extensionUri,
-          //   viewType: "antiblock.analysis-report",
-          //   title: path,
-          //   column: vscode.ViewColumn.Beside,
-          // });
+          const detectResultMatch = result.match(detectResultRegex);
+          const auditReportMatch = result.match(auditReportRegex);
 
-          // panelProvider.render();
-          // panelProvider.panel.webview.postMessage({
-          //   type: "printResult",
-          //   payload: {
-          //     stdout,
-          //   },
-          // });
+          if (detectResultMatch && auditReportMatch) {
+            const detectResultPath = path.join(
+              detectResultMatch[1],
+              Filename + ".json"
+            );
+            const auditReportPath = path.join(
+              auditReportMatch[1],
+              Filename + ".md"
+            );
 
-          break;
+            const jsonData = fs.readFileSync(detectResultPath, "utf8");
+
+            // const panelProvider = new SecurityAnalysisWebviewPanelProvider({
+            //   extensionUri: this.extensionUri,
+            //   viewType: "antiblock.analysis-report",
+            //   title: result,
+            //   column: vscode.ViewColumn.Beside,
+            // });
+
+            // panelProvider.render();
+            // panelProvider.onDidReceiveMessage(async (data) => {
+            //   const { type, payload } = data;
+            //   switch (type) {
+            //     case "init": {
+            //       panelProvider.panel.webview.postMessage({
+            //         type: "init",
+            //         payload: {
+            //           jsonData,
+            //         },
+            //       });
+            //       break;
+            //     }
+            //   }
+            // });
+          }
         }
       }
     });
@@ -175,5 +204,22 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
         }
       );
     });
+  }
+
+  private getJsonFileFromStdout(stdout: string, fileName: string) {
+    const directoryPath = stdout.split(":")[1];
+    const jsonFileName = fileName
+      .split("/")
+      .pop()
+      ?.split(".")[0]
+      .concat(".json");
+
+    if (!jsonFileName) {
+      throw new Error("Invalid file name");
+    }
+
+    const jsonFilePath = path.join(directoryPath, jsonFileName);
+
+    return require(jsonFilePath);
   }
 }
