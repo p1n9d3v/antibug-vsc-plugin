@@ -4,6 +4,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 import WebviewProvider from "./webview";
+import AnalysisResultWebviewPanelProvider from "./analysis-result";
 
 import { exec } from "child_process";
 import { v4 as uuidv4 } from "uuid";
@@ -147,6 +148,7 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
             const auditReportRegex = /Audit Report Output directory: (.+)/;
             const detectResultMatch = result.match(detectResultRegex);
             const auditReportMatch = result.match(auditReportRegex);
+
             if (detectResultMatch && auditReportMatch) {
               this.detectResult = path.join(
                 detectResultMatch[1],
@@ -165,7 +167,27 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
                 type: "analysisResult",
                 payload: {},
               });
-            }
+
+              const panelProvider = new AnalysisResultWebviewPanelProvider({
+                extensionUri: this.extensionUri,
+                viewType: "antiblock.analysis-result",
+                title: Filename + " Analysis Result",
+                column: vscode.ViewColumn.Beside,
+              });
+              panelProvider.render();
+              panelProvider.onDidReceiveMessage(async (data) => {
+                const { type, payload } = data;
+              switch (type) {
+                case "init": {
+                  panelProvider.panel.webview.postMessage({
+                    type: "init",
+                    payload: {
+                      port: 8502,
+                    },
+                  });
+                  break;
+                }
+            }});
           } else {
             vscode.window
               .showInformationMessage(
