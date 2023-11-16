@@ -9,12 +9,7 @@ const oldState = vscode.getState();
   });
 
   $(".analysis__run").click(() => {
-    const selectedLanguages = [];
-    $(".language__list input[name=language]:checked").each(function () {
-      const value = $(this).siblings(".language__text").text();
-      selectedLanguages.push(value);
-    });
-
+    // $(".analysis__run").addClass("loading");
     const selectedSolFile = $(".analysis__files select").val();
     const selectedRules = [];
     $(".rule__list input[name=checkbox]:checked").each(function () {
@@ -22,14 +17,7 @@ const oldState = vscode.getState();
       selectedRules.push(value);
     });
 
-    if (selectedLanguages.length === 0) {
-      vscode.postMessage({
-        type: "error",
-        payload: {
-          errMsg: "Please select a language type.",
-        },
-      });
-    } else if (selectedRules.length === 0) {
+    if (selectedRules.length === 0) {
       vscode.postMessage({
         type: "error",
         payload: {
@@ -37,25 +25,16 @@ const oldState = vscode.getState();
         },
       });
     } else {
-      const languagesString = selectedLanguages.join(" ");
       const rulesString = selectedRules.join(" ");
 
       vscode.postMessage({
-        type: "analysis",
+        type: "RunAnalysis",
         payload: {
-          selectedLanguages: languagesString,
-          selectedRules: rulesString,
-          selectedSolFile,
+          Rules: rulesString,
+          Files: selectedSolFile,
         },
       });
     }
-  });
-
-  $(".audit-report").click(() => {
-    vscode.postMessage({
-      type: "auditReport",
-      payload: {},
-    });
   });
 
   $(".analysis__files select").change((event) => {
@@ -67,6 +46,20 @@ const oldState = vscode.getState();
       },
     });
   });
+
+  $(".auditReport__extract").click(() => {
+    vscode.postMessage({
+      type: "ExtractAuditReport",
+      payload: {},
+    });
+  });
+
+  // $(".unitTest__run").click(() => {
+  //   vscode.postMessage({
+  //     type: "RunUnitTest",
+  //     payload: {},
+  //   });
+  // });
 
   window.addEventListener("message", ({ data: { type, payload } }) => {
     switch (type) {
@@ -83,9 +76,25 @@ const oldState = vscode.getState();
         break;
       }
 
-      case "": {
-        const { result } = payload;
-        break;
+      case "analysisResult": {
+        const unitTestElement = $(".unitTest__run");
+        const AuditReportElement = $(".auditReport__extract");
+
+        const unitTestButtonExists =
+          unitTestElement.find(".unitTest").length > 0;
+        const auditReportButtonExists =
+          AuditReportElement.find(".auditReport").length > 0;
+
+        if (!unitTestButtonExists) {
+          unitTestElement.append(
+            `<button class="unitTest">Run Unit Test</button>`
+          );
+        }
+        if (!auditReportButtonExists) {
+          AuditReportElement.append(
+            `<button class="auditReport">Extract Audit Report</button>`
+          );
+        }
       }
     }
   });

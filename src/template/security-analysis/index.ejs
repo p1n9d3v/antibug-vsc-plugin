@@ -18,15 +18,11 @@
         }) %> <% }); %>
       </div>
     </div>
-    <%- include('seperator.ejs',{text: "Select Language"}) %>
-    <div class="language">
-      <div class="language__list">
-        <% ['Korean', 'English'].forEach(function(value){ %> <%-
-        include('language', { text: value, value: value}) %> <% }); %>
-      </div>
+    <div class="button">
+      <button class="analysis__run">Run Analysis</button>
+      <div class="unitTest__run hidden"></div>
+      <div class="auditReport__extract hidden"></div>
     </div>
-    <button class="analysis__run">Analysis</button>
-    <button class="audit-report">Audit Report</button>
 
     <!-- SCRIPTS -->
     <%-include('scripts.ejs') %>
