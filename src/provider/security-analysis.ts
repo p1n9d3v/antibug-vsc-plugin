@@ -6,14 +6,16 @@ import * as path from "path";
 import WebviewProvider from "./webview";
 import AnalysisResultWebviewPanelProvider from "./analysis-result";
 
-import { exec } from "child_process";
+import { exec, ChildProcess } from "child_process";
 import { v4 as uuidv4 } from "uuid";
 import { error } from "console";
+import { mainModule, stdout } from "process";
 
 export default class SecurityAnalysisViewProvider extends WebviewProvider {
   private auditReportKR?: string;
   private auditReportEN?: string;
   private detectResult?: string;
+  private streamlitProcess?: ChildProcess;
 
   constructor({
     extensionUri,
@@ -87,6 +89,47 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
               solFiles.push(...files);
             }
           }
+          this.streamlitProcess = exec(
+            `streamlit run /Users/dlanara/Desktop/immm/ProtocolCamp/dev/SafeDevAnalyzer/antibug/run_detectors/app.py --server.port 8507`,
+            (error, stdout, stderr) => {
+              if (error) {
+                console.error(`exec error: ${error}`);
+              }
+            }
+          );
+
+          this.streamlitProcess.stdout?.on("data", (data) => {
+            const strData = data.toString();
+            const matches = strData.match(
+              /Local URL: (http:\/\/localhost:\d+)/
+            );
+
+            if (matches && matches.length > 1) {
+              const url = matches[1];
+
+              const panelProvider = new AnalysisResultWebviewPanelProvider({
+                extensionUri: this.extensionUri,
+                viewType: "antiblock.analysis-result",
+                title: " Analysis Result",
+                column: vscode.ViewColumn.Beside,
+              });
+              panelProvider.render();
+              panelProvider.onDidReceiveMessage(async (data) => {
+                const { type, payload } = data;
+                switch (type) {
+                  case "init": {
+                    panelProvider.panel.webview.postMessage({
+                      type: "init",
+                      payload: {
+                        url,
+                      },
+                    });
+                    break;
+                  }
+                }
+              });
+            }
+          });
 
           this.view?.webview.postMessage({
             type: "init",
@@ -127,7 +170,15 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
             await this.ExtractAuditReport(this.auditReportKR, false);
             await this.ExtractAuditReport(this.auditReportEN, false);
           } else {
-            console.log(Error);
+            vscode.window
+              .showInformationMessage("", "확인", "취소")
+              .then((value) => {
+                if (value === "확인") {
+                  vscode.commands.executeCommand(
+                    "workbench.action.problems.focus"
+                  );
+                }
+              });
           }
           break;
         }
@@ -167,43 +218,23 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
                 type: "analysisResult",
                 payload: {},
               });
-
-              const panelProvider = new AnalysisResultWebviewPanelProvider({
-                extensionUri: this.extensionUri,
-                viewType: "antiblock.analysis-result",
-                title: Filename + " Analysis Result",
-                column: vscode.ViewColumn.Beside,
-              });
-              panelProvider.render();
-              panelProvider.onDidReceiveMessage(async (data) => {
-                const { type, payload } = data;
-              switch (type) {
-                case "init": {
-                  panelProvider.panel.webview.postMessage({
-                    type: "init",
-                    payload: {
-                      port: 8502,
-                    },
-                  });
-                  break;
-                }
-            }});
-          } else {
-            vscode.window
-              .showInformationMessage(
-                "Vulnerabilities have not been detected.",
-                "확인",
-                "취소"
-              )
-              .then((value) => {
-                if (value === "확인") {
-                  vscode.commands.executeCommand(
-                    "workbench.action.problems.focus"
-                  );
-                }
-              });
+            } else {
+              vscode.window
+                .showInformationMessage(
+                  "Vulnerabilities have not been detected.",
+                  "확인",
+                  "취소"
+                )
+                .then((value) => {
+                  if (value === "확인") {
+                    vscode.commands.executeCommand(
+                      "workbench.action.problems.focus"
+                    );
+                  }
+                });
+            }
+            break;
           }
-          break;
         }
       }
     });
@@ -272,5 +303,39 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
         );
       }
     }
+  }
+
+  private async getPortNum(port: string): Promise<{
+    status: string;
+    message: string;
+  }> {
+    return new Promise((resolve, reject) => {
+      exec(
+        `streamlit run /Users/dlanara/Desktop/immm/ProtocolCamp/dev/SafeDevAnalyzer/antibug/run_detectors/app.py`,
+        // `streamlit run /Users/dlanara/Desktop/immm/ProtocolCamp/dev/SafeDevAnalyzer/antibug/run_detectors/app.py --server.port ${port}`,
+        (error, stdout, stderr) => {
+          if (error) {
+            console.error(`exec error: ${error}`);
+            vscode.window
+              .showInformationMessage(error.message, "확인", "취소")
+              .then((value) => {
+                if (value === "확인") {
+                  vscode.commands.executeCommand(
+                    "workbench.action.problems.focus"
+                  );
+                }
+              });
+          }
+          if (stderr) {
+            console.error(`stderr: ${stderr}`);
+            vscode.window.showInformationMessage(stderr);
+          }
+          return resolve({
+            status: "success",
+            message: stdout,
+          });
+        }
+      );
+    });
   }
 }

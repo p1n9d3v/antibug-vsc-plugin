@@ -11,11 +11,11 @@ const oldState = vscode.getState();
   window.addEventListener("message", ({ data: { type, payload } }) => {
     switch (type) {
       case "init": {
-        const { port } = payload;
-        console.log(port);
-        // const iframe = document.getElementsByClassName("ifram");
-        // iframe.src = `http://localhost:${port}`;
-        // break;
+        const { url } = payload;
+
+        const iframe = document.querySelector(".ifram");
+        iframe.src = url;
+        break;
       }
     }
   });
