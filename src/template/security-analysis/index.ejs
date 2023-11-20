@@ -7,20 +7,23 @@
   <body>
     <%- include('seperator.ejs',{text: "Select File"}) %>
     <div class="analysis__files">
-      <select></select>
+      <select>
+        <option class="none__files" disabled selected>
+          Select a file to analyze
+        </option>
+      </select>
     </div>
     <%- include('seperator.ejs',{text: "Select Rule"}) %>
     <div class="rule">
       <div class="rule__list">
-        <%
-        ['Reentrancy','tx-origin','IncorrectReturn','Delegate-call','Owner','Bad-Randomness','Visibility','Self-Destructor'].forEach(
+        <% ['incorrect-return', 'Assembly', 'Randomness', 'Delegatecall','DoS',
+        'Operations','Ownership','Reentrancy','SelfDestruct'].forEach(
         function(value){ %> <%- include('checkbox', { text: value, value: value
         }) %> <% }); %>
       </div>
     </div>
     <div class="button">
       <button class="analysis__run">Run Analysis</button>
-      <div class="unitTest__run hidden"></div>
       <div class="auditReport__extract hidden"></div>
     </div>
 

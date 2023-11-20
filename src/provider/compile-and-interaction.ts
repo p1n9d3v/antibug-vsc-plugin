@@ -184,10 +184,9 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
 
           const { abis, bytecodes } = contract;
           const iface = new Interface(abis);
-          // const ifaceFormat = iface.format(FormatTypes.full);
 
           const latestBlock = this.node.getLatestBlock();
-          const estimatedGasLimit = this.node.getEstimatedGasLimit(latestBlock); // 추후 필요할듯
+          const estimatedGasLimit = this.node.getEstimatedGasLimit(latestBlock);
           const baseFee = latestBlock.header.calcNextBaseFee();
 
           const data = iface.encodeDeploy(deployArguments).slice(2);
@@ -406,7 +405,7 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
     message: string;
   }> {
     return new Promise((resolve, reject) => {
-      exec(`antibug deploy ${filePath}`, (error, stdout, stderr) => {
+      exec(`antibug compile ${filePath}`, (error, stdout, stderr) => {
         if (error) {
           console.error(`exec error: ${error}`);
           vscode.window

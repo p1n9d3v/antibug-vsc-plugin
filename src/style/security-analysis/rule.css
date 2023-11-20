@@ -9,6 +9,14 @@
   padding: 0px 8px 0;
 }
 
+.analysis__files select {
+  padding-right: 50px;
+}
+
+.none__files :disabled {
+  display: none;
+}
+
 .button {
   display: flex;
   flex-direction: column;
@@ -111,3 +119,15 @@
   transition: box-shadow 0.25s ease, background 1s ease, color 0.25s ease;
 }
 /* CHECKBOX END */
+
+.none__files {
+  display: flex;
+  gap: 12px;
+}
+
+.none__files::before,
+.none__files::after {
+  content: "";
+  border: 1px dashed #fff;
+  width: 30%;
+}

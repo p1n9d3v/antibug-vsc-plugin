@@ -1,10 +1,13 @@
-const vscode = acquireVsCodeApi();
-const oldState = vscode.getState();
-
 (function () {
+  const vscode = acquireVsCodeApi();
+  const oldState = vscode.getState();
   $(window).ready(() => {
     vscode.postMessage({
       type: "init",
+      payload: {
+        rules: oldState.rules,
+        files: oldState.files,
+      },
     });
   });
 
@@ -27,11 +30,13 @@ const oldState = vscode.getState();
     } else {
       const rulesString = selectedRules.join(" ");
 
+      vscode.setState({ rules: rulesString, files: selectedSolFile });
+
       vscode.postMessage({
         type: "RunAnalysis",
         payload: {
-          Rules: rulesString,
-          Files: selectedSolFile,
+          rules: rulesString,
+          files: selectedSolFile,
         },
       });
     }
@@ -39,6 +44,11 @@ const oldState = vscode.getState();
 
   $(".analysis__files select").change((event) => {
     const path = event.target.value;
+
+    // vscode.setState({
+    //   file: path,
+    // });
+
     vscode.postMessage({
       type: "changeFile",
       payload: {
@@ -54,17 +64,10 @@ const oldState = vscode.getState();
     });
   });
 
-  // $(".unitTest__run").click(() => {
-  //   vscode.postMessage({
-  //     type: "RunUnitTest",
-  //     payload: {},
-  //   });
-  // });
-
   window.addEventListener("message", ({ data: { type, payload } }) => {
     switch (type) {
       case "init": {
-        const { solFiles } = payload;
+        const { solFiles, rules, files } = payload;
 
         solFiles.forEach(({ path }) => {
           const optionElement = $("<option></option>");
@@ -73,23 +76,16 @@ const oldState = vscode.getState();
 
           $(".analysis__files select").append(optionElement);
         });
+
         break;
       }
 
       case "analysisResult": {
-        const unitTestElement = $(".unitTest__run");
         const AuditReportElement = $(".auditReport__extract");
 
-        const unitTestButtonExists =
-          unitTestElement.find(".unitTest").length > 0;
         const auditReportButtonExists =
           AuditReportElement.find(".auditReport").length > 0;
 
-        if (!unitTestButtonExists) {
-          unitTestElement.append(
-            `<button class="unitTest">Run Unit Test</button>`
-          );
-        }
         if (!auditReportButtonExists) {
           AuditReportElement.append(
             `<button class="auditReport">Extract Audit Report</button>`

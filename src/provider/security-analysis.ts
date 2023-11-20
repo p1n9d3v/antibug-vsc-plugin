@@ -1,20 +1,18 @@
-import { runTests } from "@vscode/test-electron";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 
 import WebviewProvider from "./webview";
 import AnalysisResultWebviewPanelProvider from "./analysis-result";
+import WelcomeWebviewPanelProvider from "./welcome";
 
 import { exec, ChildProcess } from "child_process";
-import { v4 as uuidv4 } from "uuid";
-import { error } from "console";
-import { mainModule, stdout } from "process";
 
 export default class SecurityAnalysisViewProvider extends WebviewProvider {
   private auditReportKR?: string;
   private auditReportEN?: string;
-  private detectResult?: string;
+  // private detectResultKR?: string;
+  // private detectResultEN?: string;
   private streamlitProcess?: ChildProcess;
 
   constructor({
@@ -77,6 +75,7 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
 
       switch (type) {
         case "init": {
+          const { rules, files } = payload;
           const workspaceFolders = vscode.workspace.workspaceFolders;
           const solFiles: vscode.Uri[] = [];
 
@@ -89,52 +88,21 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
               solFiles.push(...files);
             }
           }
-          this.streamlitProcess = exec(
-            `streamlit run /Users/dlanara/Desktop/immm/ProtocolCamp/dev/SafeDevAnalyzer/antibug/run_detectors/app.py --server.port 8507`,
-            (error, stdout, stderr) => {
-              if (error) {
-                console.error(`exec error: ${error}`);
-              }
-            }
+
+          vscode.commands.executeCommand(
+            "markdown.showPreviewToSide",
+            vscode.Uri.file(
+              "/Users/dlanara/Desktop/immm/ProtocolCamp/dev/antiblock/Welcome.md"
+            ),
+            vscode.ViewColumn.Two
           );
-
-          this.streamlitProcess.stdout?.on("data", (data) => {
-            const strData = data.toString();
-            const matches = strData.match(
-              /Local URL: (http:\/\/localhost:\d+)/
-            );
-
-            if (matches && matches.length > 1) {
-              const url = matches[1];
-
-              const panelProvider = new AnalysisResultWebviewPanelProvider({
-                extensionUri: this.extensionUri,
-                viewType: "antiblock.analysis-result",
-                title: " Analysis Result",
-                column: vscode.ViewColumn.Beside,
-              });
-              panelProvider.render();
-              panelProvider.onDidReceiveMessage(async (data) => {
-                const { type, payload } = data;
-                switch (type) {
-                  case "init": {
-                    panelProvider.panel.webview.postMessage({
-                      type: "init",
-                      payload: {
-                        url,
-                      },
-                    });
-                    break;
-                  }
-                }
-              });
-            }
-          });
 
           this.view?.webview.postMessage({
             type: "init",
             payload: {
               solFiles,
+              rules,
+              files,
             },
           });
           break;
@@ -152,7 +120,6 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
 
         case "error": {
           const { errMsg } = payload;
-          console.log(errMsg);
           vscode.window
             .showInformationMessage(errMsg, "확인", "취소")
             .then((value) => {
@@ -183,57 +150,125 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
           break;
         }
 
-        // case "RunUnitTest": {
-        // }
-
         case "RunAnalysis": {
-          const { Rules, Files } = payload;
-
-          const stdout = await this.analysis(Rules, Files);
-
-          const result = stdout.message;
-          const NoDetectRegex = /Nothing to detect/;
-          if (!result.match(NoDetectRegex)) {
-            const Filename = path.basename(Files, path.extname(Files));
-            const detectResultRegex = /Detect Result Output directory: (.+)/;
-            const auditReportRegex = /Audit Report Output directory: (.+)/;
-            const detectResultMatch = result.match(detectResultRegex);
-            const auditReportMatch = result.match(auditReportRegex);
-
-            if (detectResultMatch && auditReportMatch) {
-              this.detectResult = path.join(
-                detectResultMatch[1],
-                Filename + ".json"
-              );
-              this.auditReportKR = path.join(
-                auditReportMatch[1],
-                Filename + "_kr.md"
-              );
-              this.auditReportEN = path.join(
-                auditReportMatch[1],
-                Filename + "_en.md"
-              );
-
-              this.view?.webview.postMessage({
-                type: "analysisResult",
-                payload: {},
+          const { rules, files } = payload;
+          if (files === "Select a file to analyze") {
+            vscode.window
+              .showInformationMessage(
+                "Please select a file to analyze.",
+                "확인",
+                "취소"
+              )
+              .then((value) => {
+                if (value === "확인") {
+                  vscode.commands.executeCommand(
+                    "workbench.action.problems.focus"
+                  );
+                }
               });
-            } else {
-              vscode.window
-                .showInformationMessage(
-                  "Vulnerabilities have not been detected.",
-                  "확인",
-                  "취소"
-                )
-                .then((value) => {
-                  if (value === "확인") {
-                    vscode.commands.executeCommand(
-                      "workbench.action.problems.focus"
-                    );
+            break;
+          } else {
+            const stdout = await this.analysis(rules, files);
+
+            const result = stdout.message;
+
+            if (result.match(/Detecting specific vulnerabilities/)) {
+              const Filename = path.basename(files, path.extname(files));
+              const OutputDirectoryRegex = /Output Directory: (.+)/;
+              const OutputDirectoryMatch = result.match(OutputDirectoryRegex);
+
+              if (OutputDirectoryMatch && OutputDirectoryMatch.length > 1) {
+                const OutputDirectoryPath = OutputDirectoryMatch[1].trim();
+
+                this.auditReportEN = path.join(
+                  OutputDirectoryPath,
+                  "/audit_report",
+                  Filename + "_en.md"
+                );
+                this.auditReportKR = path.join(
+                  OutputDirectoryPath,
+                  "/audit_report",
+                  Filename + "_kr.md"
+                );
+                const panelProvider = new AnalysisResultWebviewPanelProvider({
+                  extensionUri: this.extensionUri,
+                  viewType: "antiblock.analysis-result",
+                  title: " Analysis Result",
+                  column: vscode.ViewColumn.Two,
+                });
+                panelProvider.render();
+                panelProvider.onDidReceiveMessage(async (data) => {
+                  const { type, payload } = data;
+                  switch (type) {
+                    case "init": {
+                      panelProvider.panel.webview.postMessage({
+                        type: "init",
+                        payload: {
+                          OutputDirectoryPath,
+                        },
+                      });
+                      break;
+                    }
                   }
                 });
+                const streamlitRegex = /Streamlit Path: (.+)/;
+                const streamlitMatch = result.match(streamlitRegex);
+                // this.streamlitProcess = exec(
+                //   `streamlit run {streamlitMatch[1]}`,
+                //   (error, stdout, stderr) => {
+                //     if (error) {
+                //       console.error(`exec error: ${error}`);
+                //     }
+                //   }
+                // );
+                // this.streamlitProcess.stdout?.on("data", (data) => {
+                //   const strData = data.toString();
+                //   const matches = strData.match(
+                //     /Local URL: (http:\/\/localhost:\d+)/
+                //   );
+                //   if (matches && matches.length > 1) {
+                //     const url = matches[1];
+                //     const panelProvider =
+                //       new AnalysisResultWebviewPanelProvider({
+                //         extensionUri: this.extensionUri,
+                //         viewType: "antiblock.analysis-result",
+                //         title: " Analysis Result",
+                //         column: vscode.ViewColumn.Two,
+                //       });
+                //     panelProvider.render();
+                //     panelProvider.onDidReceiveMessage(async (data) => {
+                //       const { type, payload } = data;
+                //       switch (type) {
+                //         case "init": {
+                //           panelProvider.panel.webview.postMessage({
+                //             type: "AnalysisReport",
+                //             payload: {
+                //               url,
+                //             },
+                //           });
+                //           break;
+                //         }
+                //       }
+                //     });
+                //   }
+                // });
+              } else {
+                vscode.window
+                  .showInformationMessage(
+                    "Vulnerabilities have not been detected.",
+                    "확인",
+                    "취소"
+                  )
+                  .then((value) => {
+                    if (value === "확인") {
+                      vscode.commands.executeCommand(
+                        "workbench.action.problems.focus"
+                      );
+                    }
+                  });
+              }
+              break;
             }
-            break;
           }
         }
       }
@@ -274,7 +309,6 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
   }
 
   private async ExtractAuditReport(filePath: string, view: boolean) {
-    console.log("Start ExtractAuditReport");
     const fileContent = fs.readFileSync(filePath, "utf8");
     const workspaceFolders = vscode.workspace.workspaceFolders;
 
@@ -305,37 +339,23 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
     }
   }
 
-  private async getPortNum(port: string): Promise<{
-    status: string;
-    message: string;
-  }> {
-    return new Promise((resolve, reject) => {
-      exec(
-        `streamlit run /Users/dlanara/Desktop/immm/ProtocolCamp/dev/SafeDevAnalyzer/antibug/run_detectors/app.py`,
-        // `streamlit run /Users/dlanara/Desktop/immm/ProtocolCamp/dev/SafeDevAnalyzer/antibug/run_detectors/app.py --server.port ${port}`,
-        (error, stdout, stderr) => {
-          if (error) {
-            console.error(`exec error: ${error}`);
-            vscode.window
-              .showInformationMessage(error.message, "확인", "취소")
-              .then((value) => {
-                if (value === "확인") {
-                  vscode.commands.executeCommand(
-                    "workbench.action.problems.focus"
-                  );
-                }
-              });
-          }
-          if (stderr) {
-            console.error(`stderr: ${stderr}`);
-            vscode.window.showInformationMessage(stderr);
-          }
-          return resolve({
-            status: "success",
-            message: stdout,
-          });
-        }
-      );
-    });
-  }
+  // private getAnalysisResult(filePath: string) {
+  //   try {
+  //     const fileContent = fs.readFileSync(filePath, "utf8");
+  //     const parsedData = JSON.parse(fileContent);
+  //     const detectors = [];
+
+  //     for (const key in parsedData) {
+  //       if (Object.prototype.hasOwnProperty.call(parsedData, key)) {
+  //         const obj = parsedData[key];
+  //         if (obj.results && obj.results.detector) {
+  //           detectors.push(obj.results.detector + ".test.js");
+  //         }
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     return [];
+  //   }
+  // }
 }
