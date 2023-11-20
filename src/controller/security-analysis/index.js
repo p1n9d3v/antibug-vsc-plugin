@@ -24,6 +24,7 @@ const oldState = vscode.getState();
     const languagesString = selectedLanguages.join(" ");
     const rulesString = selectedRules.join(" ");
 
+    
     vscode.postMessage({
       type: "analysis",
       payload: {

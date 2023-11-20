@@ -8,10 +8,6 @@ const oldState = vscode.getState();
     });
   });
 
-  $(".result__info-title").click(() => {
-    $(".result__info-data").toggle("hidden");
-    $(".result__info-title .fa-chevron-down").toggleClass("rotate");
-  });
   // 솔직히 없어도 됌 ㅋㅋ 걍재미로 넣어봄
 
   window.addEventListener("message", ({ data: { type, payload } }) => {
@@ -25,7 +21,7 @@ const oldState = vscode.getState();
         functionsElement.empty();
 
         abis.forEach((abi) => {
-          const functionElement = $(makeFunctionElement(abi));
+          const functionElement = $(createFunctionElement(abi));
 
           functionElement.find(".function__interaction input").change(() => {
             functionElement
@@ -64,7 +60,6 @@ const oldState = vscode.getState();
                 arguments: resultArguments,
               },
             });
-            changeContractBalance;
           });
           $(".contract__address").text(`Address: ${address}`);
           $(".contract__balance").text(`Balance: ${balance}`);
@@ -73,7 +68,7 @@ const oldState = vscode.getState();
         });
 
         // animation
-        interactionButtonAnimation();
+        addShowArgumentActionButton();
 
         break;
       }
@@ -85,21 +80,22 @@ const oldState = vscode.getState();
       }
 
       case "transactionResult": {
-        const {
-          amountSpent,
-          totalSpent,
-          from,
-          to,
-          executedGasUsed,
-          decodeInput,
-        } = payload;
+        const receiptElement = $(createReceiptElement(payload));
+        receiptElement.find(".receipt__info-title").click(() => {
+          receiptElement.find(".receipt__info-data").toggleClass("hidden");
+          receiptElement
+            .find(".receipt__info-title .fa-chevron-down")
+            .toggleClass("rotate");
+        });
+        $(".receipts").append(receiptElement);
+
         break;
       }
     }
   });
 })();
 
-function interactionButtonAnimation() {
+function addShowArgumentActionButton() {
   const functionElements = $(".function");
   functionElements.each((index, element) => {
     element = $(element);
@@ -123,7 +119,7 @@ function interactionButtonAnimation() {
   });
 }
 
-function makeFunctionElement(abi) {
+function createFunctionElement(abi) {
   const inputs = abi.inputs
     .map((input) => `${input.type} ${input.name}`)
     .join(", ");
@@ -158,5 +154,82 @@ function makeFunctionElement(abi) {
           : ""
       }
     </div>
+  `;
+}
+
+function createReceiptElement(receipt) {
+  const {
+    txHash,
+    from,
+    to,
+    amountSpent,
+    totalSpent,
+    executedGasUsed,
+    input,
+    output,
+    error,
+  } = receipt;
+
+  if (error) {
+    return `
+    <div class="receipt__info">
+        <div class="receipt__info-title">
+        <i class="fas fa-times-circle" style="color: #dd0e0e;"></i>
+          <div class="receipt__info-tx-hash">${txHash}</div>
+          <i class="fa fa-chevron-down"></i>
+        </div>
+        <div class="receipt__info-data hidden">
+          <div class="receipt__error">${error
+            .split(",")
+            .join("<br /><br />")}</div>
+        </div>
+      </div>
+    `;
+  }
+  return `
+      <div class="receipt__info">
+        <div class="receipt__info-title">
+          <i class="fas fa-check-circle" style="color: #76fc64"></i>
+          <div class="receipt__info-tx-hash">${txHash}</div>
+          <i class="fa fa-chevron-down"></i>
+        </div>
+        <div class="receipt__info-data hidden">
+          <div class="receipt__info-from">
+            <div>from</div>
+            <div>:</div>
+            <div>${from}</div>
+          </div>
+          <div class="receipt__info-to">
+            <div>to</div>
+            <div>:</div>
+            <div>${to}</div>
+          </div>
+          <div class="receipt__info-gas-amount-spent">
+            <div>gas amount spent(totalgas x gas price)</div>
+            <div>:</div>
+            <div>${amountSpent}</div>
+          </div>
+          <div class="receipt__info-gas-total-spent">
+            <div>gas total spent</div>
+            <div>:</div>
+            <div>${totalSpent}</div>
+          </div>
+          <div class="receipt__info-gas-executedGasUsed">
+            <div>executed gas used</div>
+            <div>:</div>
+            <div>${executedGasUsed}</div>
+          </div>
+          <div class="receipt__info-input">
+            <div>input</div>
+            <div>:</div>
+            <div>[${input.join(",")}]</div>
+          </div>
+          <div class="receipt__info-output">
+            <div>output</div>
+            <div>:</div>
+            <div>[${output.join(",")}]</div>
+          </div>
+        </div>
+      </div>
   `;
 }

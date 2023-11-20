@@ -9,9 +9,10 @@ import ContractInteractionWebviewPanelProvider from "./contract-interaction";
 import { exec } from "child_process";
 import { DEFAULT_ACCOUNTS } from "../util/config";
 import { v4 as uuidv4 } from "uuid";
-import { bigIntToHex, bytesToHex, hexToBytes } from "@ethereumjs/util";
+import { Address, bigIntToHex, bytesToHex, hexToBytes } from "@ethereumjs/util";
 import { FeeMarketEIP1559Transaction } from "@ethereumjs/tx";
-import { Interface, FormatTypes } from "ethers/lib/utils";
+import { Interface, FormatTypes, RLP } from "ethers/lib/utils";
+import { RunTxResult, TxReceipt } from "@ethereumjs/vm";
 
 export default class CompileAndInteractionViewProvider extends WebviewProvider {
   private node!: AntiBlockNode;
@@ -164,11 +165,6 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
               bytecodes,
             };
           }
-          //  const newABI = makeABI(abis);
-
-          //  const iface = new Interface(abis);
-          //  console.log(iface.format(FormatTypes.full));
-          // console.log(contracts);
 
           this.view?.webview.postMessage({
             type: "compileResult",
@@ -269,62 +265,81 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
                     txData
                   ).sign(hexToBytes(this.currentAccount.privateKey));
 
-                  const { receipt } = await this.node.mine(tx);
-                  console.log(
-                    "result",
-                    bytesToHex(receipt.execResult.returnValue).toString()
-                  );
+                  try {
+                    const { receipt } = await this.node.mine(tx);
 
-                  const amountSpent = receipt.amountSpent.toString();
-                  const totalSpent = receipt.totalGasSpent.toString();
-                  const from =
-                    receipt.execResult.runState?.env.caller.toString();
-                  const to =
-                    receipt.execResult.runState?.env.address.toString();
-                  const executedGasUsed =
-                    receipt.execResult.executionGasUsed.toString();
-                  const decodeInput = iface.decodeFunctionData(
-                    functionName,
-                    receipt.execResult.runState?.env.callData as any
-                  );
-                  const txHash = tx.hash().toString();
-
-                  console.log("amountSpent", amountSpent);
-                  console.log("totalSpent", totalSpent);
-                  console.log("from", from);
-                  console.log("to", to);
-                  console.log("executedGasUsed", executedGasUsed);
-                  console.log("decodeInput", decodeInput);
-
-                  const balance = (
-                    await this.node.getBalance(contractAddress)
-                  ).toString();
-                  panelProvider.panel.webview.postMessage({
-                    type: "changeContractBalance",
-                    payload: {
-                      balance,
-                    },
-                  });
-
-                  await this.changeAccountState();
-
-                  panelProvider.panel.webview.postMessage({
-                    type: "transactionResult",
-                    payload: {
-                      txHash,
+                    const {
                       amountSpent,
                       totalSpent,
                       from,
                       to,
                       executedGasUsed,
-                      decodeInput,
-                    },
-                  });
+                      input,
+                      output,
+                    } = this.parseReceipt(receipt, iface, functionName);
+                    const txHash = bytesToHex(tx.hash());
 
-                  console.log(receipt);
+                    const balance = (
+                      await this.node.getBalance(contractAddress)
+                    ).toString();
+                    panelProvider.panel.webview.postMessage({
+                      type: "changeContractBalance",
+                      payload: {
+                        balance,
+                      },
+                    });
 
+                    console.log("receipt", receipt);
+                    const test =
+                      (await receipt.execResult.runState?.stateManager.dumpStorage(
+                        new Address(hexToBytes(contractAddress))
+                      )) as any;
+                    console.log(
+                      "rlp",
+                      Object.values(test).map((v: any) => RLP.decode(v))
+                    );
+
+                    console.log(
+                      "1",
+                      await receipt.execResult.runState?.stateManager.getContractStorage(
+                        new Address(hexToBytes(contractAddress)),
+                        hexToBytes("0x0")
+                      )
+                    );
+
+                    console.log(
+                      "2",
+                      await receipt.execResult.runState?.stateManager.getContractStorage(
+                        new Address(hexToBytes(contractAddress)),
+                        hexToBytes("0x1")
+                      )
+                    );
+
+                    await this.changeAccountState();
+
+                    panelProvider.panel.webview.postMessage({
+                      type: "transactionResult",
+                      payload: {
+                        txHash,
+                        amountSpent,
+                        totalSpent,
+                        from,
+                        to,
+                        executedGasUsed,
+                        input,
+                        output,
+                      },
+                    });
+                  } catch (e: any) {
+                    panelProvider.panel.webview.postMessage({
+                      type: "transactionResult",
+                      payload: {
+                        txHash: "Error",
+                        error: e.message,
+                      },
+                    });
+                  }
                   // get Text from result
-
                   break;
                 }
                 case "call": {
@@ -350,12 +365,55 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
                     txData
                   ).sign(hexToBytes(this.currentAccount.privateKey));
 
-                  const result = await this.node.runTx({ tx });
-                  console.log(
-                    "result",
-                    bytesToHex(result.execResult.returnValue).toString()
-                  );
+                  try {
+                    const receipt = await this.node.runTx({ tx });
 
+                    const {
+                      amountSpent,
+                      totalSpent,
+                      from,
+                      to,
+                      executedGasUsed,
+                      input,
+                      output,
+                    } = this.parseReceipt(receipt, iface, functionName);
+
+                    const txHash = bytesToHex(tx.hash());
+
+                    const balance = (
+                      await this.node.getBalance(contractAddress)
+                    ).toString();
+                    panelProvider.panel.webview.postMessage({
+                      type: "changeContractBalance",
+                      payload: {
+                        balance,
+                      },
+                    });
+
+                    await this.changeAccountState();
+
+                    panelProvider.panel.webview.postMessage({
+                      type: "transactionResult",
+                      payload: {
+                        txHash,
+                        amountSpent,
+                        totalSpent,
+                        from,
+                        to,
+                        executedGasUsed,
+                        input,
+                        output,
+                      },
+                    });
+                  } catch (e: any) {
+                    panelProvider.panel.webview.postMessage({
+                      type: "transactionResult",
+                      payload: {
+                        txHash: "Error",
+                        error: e.message,
+                      },
+                    });
+                  }
                   break;
                 }
               }
@@ -462,5 +520,36 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
         accounts,
       },
     });
+  }
+
+  private parseReceipt(
+    receipt: RunTxResult,
+    iface: Interface,
+    functionName: string
+  ) {
+    const amountSpent = receipt.amountSpent.toString();
+    const totalSpent = receipt.totalGasSpent.toString();
+    const from = receipt.execResult.runState?.env.caller.toString();
+    const to = receipt.execResult.runState?.env.address.toString();
+    const executedGasUsed = receipt.execResult.executionGasUsed.toString();
+    const input = iface
+      .decodeFunctionData(
+        functionName,
+        receipt.execResult.runState?.env.callData as any
+      )
+      .map((arg: any) => arg.toString());
+    const output = iface
+      .decodeFunctionResult(functionName, receipt.execResult.returnValue as any)
+      .map((arg: any) => arg.toString());
+
+    return {
+      amountSpent,
+      totalSpent,
+      from,
+      to,
+      executedGasUsed,
+      input,
+      output,
+    };
   }
 }

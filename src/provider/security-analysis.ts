@@ -103,8 +103,7 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
 
         case "analysis": {
           const { selectedLanguages, selectedRules, selectedSolFile } = payload;
-          console.log("sfkdjfkajfkjkdsjfkdsjfkadfkj");
-          console.log(selectedLanguages);
+          console.log(selectedSolFile, selectedRules, selectedLanguages);
 
           // const stdout = await this.analysis(language, rule, path);
           // const { message } = stdout;
