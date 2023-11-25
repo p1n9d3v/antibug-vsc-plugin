@@ -4,29 +4,37 @@ import * as path from "path";
 
 import WebviewProvider from "./webview";
 import AntiBlockNode from "../blockchain/node";
-
 import ContractInteractionWebviewPanelProvider from "./contract-interaction";
+
 import { exec } from "child_process";
 import { DEFAULT_ACCOUNTS } from "../util/config";
 import { v4 as uuidv4 } from "uuid";
-import { Address, bigIntToHex, bytesToHex, hexToBytes } from "@ethereumjs/util";
-import { FeeMarketEIP1559Transaction } from "@ethereumjs/tx";
-import { Interface, FormatTypes, RLP } from "ethers/lib/utils";
-import { RunTxResult, TxReceipt } from "@ethereumjs/vm";
+import { Interface } from "ethers/lib/utils";
+import { changeAccountState, convertBalanceByType, postMessage } from "../util";
+
+type State = {
+  account: {
+    address: string;
+    balance: string;
+    privateKey: string;
+  };
+  contract: {
+    name: string;
+    bytecodes: string;
+    address: string;
+    abis: string;
+    balance: string;
+  };
+  value: {
+    amount: string;
+    type: string;
+  };
+};
 
 export default class CompileAndInteractionViewProvider extends WebviewProvider {
   private node!: AntiBlockNode;
-  private currentAccount: {
-    address: string;
-    privateKey: string;
-    balance: string;
-  } = {
-    address: DEFAULT_ACCOUNTS[0].address,
-    privateKey: DEFAULT_ACCOUNTS[0].privateKey,
-    balance: DEFAULT_ACCOUNTS[0].balance.toString(),
-  };
-  private value: string = "0";
-
+  private state!: State;
+  private contractPanel!: ContractInteractionWebviewPanelProvider;
   constructor({
     extensionUri,
     viewType,
@@ -45,7 +53,7 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
-    context: vscode.WebviewViewResolveContext<unknown>,
+    context: vscode.WebviewViewResolveContext<State>,
     token: vscode.CancellationToken
   ): void | Thenable<void> {
     this.view = webviewView;
@@ -110,314 +118,153 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
             balance: account.balance.toString(),
           }));
 
-          this.view?.webview.postMessage({
-            type: "init",
-            payload: {
-              accounts,
-              solFiles,
-            },
+          postMessage(webviewView.webview, "init", {
+            accounts,
+            solFiles,
           });
-          break;
-        }
-        case "changeAccount": {
-          const { address, privateKey, balance } = payload;
 
-          this.currentAccount = {
-            address,
-            privateKey,
-            balance,
+          this.state = {
+            ...this.state,
+            account: {
+              address: DEFAULT_ACCOUNTS[0].address,
+              balance: DEFAULT_ACCOUNTS[0].balance.toString(),
+              privateKey: DEFAULT_ACCOUNTS[0].privateKey,
+            },
+            value: {
+              amount: "0",
+              type: "eth",
+            },
           };
-
           break;
         }
-        case "changeValue": {
-          const { value } = payload;
-          this.value = value;
-          break;
-        }
-        case "changeFile": {
+        case "openFile": {
           const { path } = payload;
           const file = await vscode.workspace.openTextDocument(path);
+
           await vscode.window.showTextDocument(file, {
             preview: false,
             viewColumn: vscode.ViewColumn.One,
           });
+
           break;
         }
-        case "compile": {
-          const { file } = payload;
-          let contracts: any = {};
+        case "changeAccount": {
+          const { account } = payload;
+          this.state = {
+            ...this.state,
+            account,
+          };
+          if (this.contractPanel) this.contractPanel.setState({ account });
+          break;
+        }
+        case "changeValue": {
+          const { value } = payload;
 
-          const compileFilePath = await this.generateCompiledFile(file);
+          this.state = {
+            ...this.state,
+            value,
+          };
+          if (this.contractPanel) this.contractPanel.setState({ value });
+          break;
+        }
+
+        case "compile": {
+          const { path } = payload;
+
+          const compileFilePath = await this.generateTempFileToCompile(path);
 
           const stdout = await this.compile(compileFilePath);
+
+          if (stdout.status === "error") {
+            postMessage(webviewView.webview, "compileResult", {
+              contracts: null,
+            });
+            break;
+          }
 
           const jsonFile = this.getJsonFileFromStdout(
             stdout.message,
             compileFilePath
           );
 
-          for (const contractName in jsonFile) {
-            const { abis, bytecodes } = jsonFile[contractName];
+          const contracts = Object.entries(jsonFile).reduce(
+            (acc: any, [contractName, contract]: any) => {
+              const { abis, bytecodes } = contract;
 
-            contracts[contractName] = {
-              abis,
-              bytecodes,
-            };
-          }
+              acc[contractName] = {
+                abis,
+                bytecodes,
+              };
 
-          this.view?.webview.postMessage({
-            type: "compileResult",
-            payload: {
-              contracts,
+              return acc;
             },
+            {}
+          );
+
+          postMessage(webviewView.webview, "compileResult", {
+            contracts,
           });
+
           break;
         }
         case "deploy": {
-          const { value, gasLimit, fromPrivateKey, contract, deployArguments } =
-            payload;
+          console.log(this.state);
+          const { contract, args } = payload;
 
           const { abis, bytecodes } = contract;
+          const { value, account } = this.state;
+          const { privateKey } = account;
+
           const iface = new Interface(abis);
-          // const ifaceFormat = iface.format(FormatTypes.full);
-
-          const latestBlock = this.node.getLatestBlock();
-          const estimatedGasLimit = this.node.getEstimatedGasLimit(latestBlock); // 추후 필요할듯
-          const baseFee = latestBlock.header.calcNextBaseFee();
-
-          const data = iface.encodeDeploy(deployArguments).slice(2);
+          const data = args.length > 0 ? iface.encodeDeploy(args).slice(2) : "";
           const callData = bytecodes.concat(data);
-
-          const txData = {
+          const tx = await this.node.makeFeeMarketEIP1559Transaction({
             to: undefined,
-            value: bigIntToHex(BigInt(this.value)),
-            maxFeePerGas: baseFee,
-            gasLimit: bigIntToHex(BigInt(estimatedGasLimit)),
-            nonce: await this.node.getNonce(this.currentAccount.privateKey),
-            data: callData,
-          };
+            value: convertBalanceByType(this.state.value.amount, value.type),
+            privateKey,
+            callData,
+          });
 
-          const tx = FeeMarketEIP1559Transaction.fromTxData(txData).sign(
-            hexToBytes(this.currentAccount.privateKey)
-          );
           const { receipt } = await this.node.mine(tx);
 
-          await this.changeAccountState();
+          const accounts = await changeAccountState(this.node);
+          postMessage(webviewView.webview, "changeAccountState", {
+            accounts,
+          });
+          postMessage(webviewView.webview, "changeValue", {
+            value: "0",
+          });
+          this.state = {
+            ...this.state,
+            value: {
+              amount: "0",
+              type: "eth",
+            },
+          };
 
           if (receipt.createdAddress) {
             const contractAddress = receipt.createdAddress.toString();
-
-            const panelProvider = new ContractInteractionWebviewPanelProvider({
+            this.contractPanel = new ContractInteractionWebviewPanelProvider({
               extensionUri: this.extensionUri,
+              node: this.node,
               viewType: "antiblock.contract-interaction",
               title: contract.name,
               column: vscode.ViewColumn.Beside,
             });
-            panelProvider.render();
-            panelProvider.onDidReceiveMessage(async (data) => {
-              const { type, payload } = data;
-              switch (type) {
-                case "init": {
-                  const abisWithoutConstructor = abis.filter(
-                    (abi: any) => abi.type !== "constructor"
-                  );
-                  const balance = (
-                    await this.node.getBalance(contractAddress)
-                  ).toString();
-                  panelProvider.panel.webview.postMessage({
-                    type: "init",
-                    payload: {
-                      contract: {
-                        address: contractAddress,
-                        name: contract.name,
-                        balance,
-                      },
-                      abis: abisWithoutConstructor,
-                    },
-                  });
-                  break;
-                }
-                case "send": {
-                  const { functionName, arguments: args } = payload;
 
-                  const latestBlock = this.node.getLatestBlock();
-                  const estimatedGasLimit =
-                    this.node.getEstimatedGasLimit(latestBlock);
-                  const baseFee = latestBlock.header.calcNextBaseFee();
-
-                  const callData = iface.encodeFunctionData(functionName, [
-                    ...args,
-                  ]);
-
-                  const txData = {
-                    to: contractAddress,
-                    value: bigIntToHex(BigInt(this.value)),
-                    maxFeePerGas: baseFee,
-                    gasLimit: bigIntToHex(BigInt(estimatedGasLimit)),
-                    nonce: await this.node.getNonce(
-                      this.currentAccount.privateKey
-                    ),
-                    data: callData,
-                  };
-
-                  const tx = FeeMarketEIP1559Transaction.fromTxData(
-                    txData
-                  ).sign(hexToBytes(this.currentAccount.privateKey));
-
-                  try {
-                    const { receipt } = await this.node.mine(tx);
-
-                    const {
-                      amountSpent,
-                      totalSpent,
-                      from,
-                      to,
-                      executedGasUsed,
-                      input,
-                      output,
-                    } = this.parseReceipt(receipt, iface, functionName);
-                    const txHash = bytesToHex(tx.hash());
-
-                    const balance = (
-                      await this.node.getBalance(contractAddress)
-                    ).toString();
-                    panelProvider.panel.webview.postMessage({
-                      type: "changeContractBalance",
-                      payload: {
-                        balance,
-                      },
-                    });
-
-                    console.log("receipt", receipt);
-                    const test =
-                      (await receipt.execResult.runState?.stateManager.dumpStorage(
-                        new Address(hexToBytes(contractAddress))
-                      )) as any;
-                    console.log(
-                      "rlp",
-                      Object.values(test).map((v: any) => RLP.decode(v))
-                    );
-
-                    console.log(
-                      "1",
-                      await receipt.execResult.runState?.stateManager.getContractStorage(
-                        new Address(hexToBytes(contractAddress)),
-                        hexToBytes("0x0")
-                      )
-                    );
-
-                    console.log(
-                      "2",
-                      await receipt.execResult.runState?.stateManager.getContractStorage(
-                        new Address(hexToBytes(contractAddress)),
-                        hexToBytes("0x1")
-                      )
-                    );
-
-                    await this.changeAccountState();
-
-                    panelProvider.panel.webview.postMessage({
-                      type: "transactionResult",
-                      payload: {
-                        txHash,
-                        amountSpent,
-                        totalSpent,
-                        from,
-                        to,
-                        executedGasUsed,
-                        input,
-                        output,
-                      },
-                    });
-                  } catch (e: any) {
-                    panelProvider.panel.webview.postMessage({
-                      type: "transactionResult",
-                      payload: {
-                        txHash: "Error",
-                        error: e.message,
-                      },
-                    });
-                  }
-                  // get Text from result
-                  break;
-                }
-                case "call": {
-                  const { functionName, arguments: args } = payload;
-                  const latestBlock = this.node.getLatestBlock();
-                  const estimatedGasLimit =
-                    this.node.getEstimatedGasLimit(latestBlock);
-                  const baseFee = latestBlock.header.calcNextBaseFee();
-
-                  const callData = iface.encodeFunctionData(functionName, args);
-                  const txData = {
-                    to: contractAddress,
-                    value: bigIntToHex(0n),
-                    maxFeePerGas: baseFee,
-                    gasLimit: bigIntToHex(BigInt(estimatedGasLimit)),
-                    nonce: await this.node.getNonce(
-                      this.currentAccount.privateKey
-                    ),
-                    data: callData,
-                  };
-
-                  const tx = FeeMarketEIP1559Transaction.fromTxData(
-                    txData
-                  ).sign(hexToBytes(this.currentAccount.privateKey));
-
-                  try {
-                    const receipt = await this.node.runTx({ tx });
-
-                    const {
-                      amountSpent,
-                      totalSpent,
-                      from,
-                      to,
-                      executedGasUsed,
-                      input,
-                      output,
-                    } = this.parseReceipt(receipt, iface, functionName);
-
-                    const txHash = bytesToHex(tx.hash());
-
-                    const balance = (
-                      await this.node.getBalance(contractAddress)
-                    ).toString();
-                    panelProvider.panel.webview.postMessage({
-                      type: "changeContractBalance",
-                      payload: {
-                        balance,
-                      },
-                    });
-
-                    await this.changeAccountState();
-
-                    panelProvider.panel.webview.postMessage({
-                      type: "transactionResult",
-                      payload: {
-                        txHash,
-                        amountSpent,
-                        totalSpent,
-                        from,
-                        to,
-                        executedGasUsed,
-                        input,
-                        output,
-                      },
-                    });
-                  } catch (e: any) {
-                    panelProvider.panel.webview.postMessage({
-                      type: "transactionResult",
-                      payload: {
-                        txHash: "Error",
-                        error: e.message,
-                      },
-                    });
-                  }
-                  break;
-                }
-              }
+            const contractBalance = await this.node.getBalance(contractAddress);
+            this.contractPanel.setState({
+              account,
+              contract: {
+                name: contract.name,
+                address: contractAddress,
+                bytecodes,
+                abis,
+                balance: contractBalance.toString(),
+              },
+              value,
             });
+            this.contractPanel.render();
           }
 
           break;
@@ -426,7 +273,7 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
     });
   }
 
-  private async generateCompiledFile(filePath: string) {
+  private async generateTempFileToCompile(filePath: string) {
     const fileData = await vscode.workspace.fs.readFile(
       vscode.Uri.file(filePath)
     );
@@ -434,7 +281,7 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
 
     const compiledFilePath = path.join(
       path.dirname(filePath),
-      `${uuidv4()}.sol`
+      `${uuidv4()}-compiled-${path.basename(filePath)}`
     );
     fs.writeFileSync(compiledFilePath, fileContent);
 
@@ -453,7 +300,11 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
       throw new Error("Invalid file name");
     }
 
-    const jsonFilePath = path.join(directoryPath, jsonFileName);
+    const jsonFilePath = path.join(
+      directoryPath,
+      "compile_json_results",
+      jsonFileName
+    );
 
     return require(jsonFilePath);
   }
@@ -463,7 +314,7 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
     message: string;
   }> {
     return new Promise((resolve, reject) => {
-      exec(`antibug deploy ${filePath}`, (error, stdout, stderr) => {
+      exec(`antibug compile ${filePath}`, (error, stdout, stderr) => {
         if (error) {
           console.error(`exec error: ${error}`);
           vscode.window
@@ -475,23 +326,21 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
                 );
               }
             });
+          fs.unlinkSync(filePath);
 
-          this.view?.webview.postMessage({
-            type: "compileResult",
-            payload: {
-              contracts: null,
-            },
+          return resolve({
+            status: "error",
+            message: error.message,
           });
         }
         if (stderr) {
           console.error(`stderr: ${stderr}`);
           vscode.window.showInformationMessage(stderr);
+          fs.unlinkSync(filePath);
 
-          this.view?.webview.postMessage({
-            type: "compileResult",
-            payload: {
-              contracts: null,
-            },
+          return resolve({
+            status: "error",
+            message: stderr,
           });
         }
         fs.unlinkSync(filePath);
@@ -501,55 +350,5 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
         });
       });
     });
-  }
-
-  private async changeAccountState() {
-    const accounts = await Promise.all(
-      DEFAULT_ACCOUNTS.map(async (account) => {
-        return {
-          address: account.address,
-          privateKey: account.privateKey,
-          balance: (await this.node.getBalance(account.address)).toString(),
-        };
-      })
-    );
-
-    this.view?.webview.postMessage({
-      type: "changeAccountState",
-      payload: {
-        accounts,
-      },
-    });
-  }
-
-  private parseReceipt(
-    receipt: RunTxResult,
-    iface: Interface,
-    functionName: string
-  ) {
-    const amountSpent = receipt.amountSpent.toString();
-    const totalSpent = receipt.totalGasSpent.toString();
-    const from = receipt.execResult.runState?.env.caller.toString();
-    const to = receipt.execResult.runState?.env.address.toString();
-    const executedGasUsed = receipt.execResult.executionGasUsed.toString();
-    const input = iface
-      .decodeFunctionData(
-        functionName,
-        receipt.execResult.runState?.env.callData as any
-      )
-      .map((arg: any) => arg.toString());
-    const output = iface
-      .decodeFunctionResult(functionName, receipt.execResult.returnValue as any)
-      .map((arg: any) => arg.toString());
-
-    return {
-      amountSpent,
-      totalSpent,
-      from,
-      to,
-      executedGasUsed,
-      input,
-      output,
-    };
   }
 }

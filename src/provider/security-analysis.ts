@@ -3,12 +3,17 @@ import * as fs from "fs";
 import * as path from "path";
 
 import WebviewProvider from "./webview";
+import AnalysisResultWebviewPanelProvider from "./analysis-result";
 
-import SecurityAnalysisWebviewPanelProvider from "./analysis-report";
-import { exec } from "child_process";
-import { v4 as uuidv4 } from "uuid";
+import { exec, ChildProcess } from "child_process";
 
 export default class SecurityAnalysisViewProvider extends WebviewProvider {
+  private auditReportKR?: string;
+  private auditReportEN?: string;
+  // private detectResultKR?: string;
+  // private detectResultEN?: string;
+  private streamlitProcess?: ChildProcess;
+
   constructor({
     extensionUri,
     viewType,
@@ -82,6 +87,14 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
             }
           }
 
+          vscode.commands.executeCommand(
+            "markdown.showPreviewToSide",
+            vscode.Uri.file(
+              "/Users/dlanara/Desktop/immm/ProtocolCamp/dev/antiblock/Welcome.md"
+            ),
+            vscode.ViewColumn.Two
+          );
+
           this.view?.webview.postMessage({
             type: "init",
             payload: {
@@ -132,29 +145,16 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
           //     stdout,
           //   },
           // });
-
           break;
         }
-      }
-    });
-  }
 
-  private async analysis(
-    language: string,
-    rule: string,
-    filePath: string
-  ): Promise<{
-    status: string;
-    message: string;
-  }> {
-    return new Promise((resolve, reject) => {
-      exec(
-        `antibug detect ${language} ${rule} ${filePath}`,
-        (error, stdout, stderr) => {
-          if (error) {
-            console.error(`exec error: ${error}`);
+        case "ExtractAuditReport": {
+          if (this.auditReportKR && this.auditReportEN) {
+            await this.ExtractAuditReport(this.auditReportKR, false);
+            await this.ExtractAuditReport(this.auditReportEN, false);
+          } else {
             vscode.window
-              .showInformationMessage(error.message, "확인", "취소")
+              .showInformationMessage("", "확인", "취소")
               .then((value) => {
                 if (value === "확인") {
                   vscode.commands.executeCommand(
@@ -163,16 +163,215 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
                 }
               });
           }
-          if (stderr) {
-            console.error(`stderr: ${stderr}`);
-            vscode.window.showInformationMessage(stderr);
-          }
-          return resolve({
-            status: "success",
-            message: stdout,
-          });
+          break;
         }
-      );
+
+        case "RunAnalysis": {
+          const { rules, files } = payload;
+          if (files === "Select a file to analyze") {
+            vscode.window
+              .showInformationMessage(
+                "Please select a file to analyze.",
+                "확인",
+                "취소"
+              )
+              .then((value) => {
+                if (value === "확인") {
+                  vscode.commands.executeCommand(
+                    "workbench.action.problems.focus"
+                  );
+                }
+              });
+            break;
+          } else {
+            const stdout = await this.analysis(rules, files);
+
+            const result = stdout.message;
+
+            if (result.match(/Detecting specific vulnerabilities/)) {
+              const Filename = path.basename(files, path.extname(files));
+              const OutputDirectoryRegex = /Output Directory: (.+)/;
+              const OutputDirectoryMatch = result.match(OutputDirectoryRegex);
+
+              if (OutputDirectoryMatch && OutputDirectoryMatch.length > 1) {
+                const OutputDirectoryPath = OutputDirectoryMatch[1].trim();
+
+                this.auditReportEN = path.join(
+                  OutputDirectoryPath,
+                  "/audit_report",
+                  Filename + "_en.md"
+                );
+                this.auditReportKR = path.join(
+                  OutputDirectoryPath,
+                  "/audit_report",
+                  Filename + "_kr.md"
+                );
+                const panelProvider = new AnalysisResultWebviewPanelProvider({
+                  extensionUri: this.extensionUri,
+                  viewType: "antiblock.analysis-result",
+                  title: " Analysis Result",
+                  column: vscode.ViewColumn.Two,
+                });
+                panelProvider.render();
+                panelProvider.onDidReceiveMessage(async (data) => {
+                  const { type, payload } = data;
+                  switch (type) {
+                    case "init": {
+                      panelProvider.panel.webview.postMessage({
+                        type: "init",
+                        payload: {
+                          OutputDirectoryPath,
+                        },
+                      });
+                      break;
+                    }
+                  }
+                });
+                const streamlitRegex = /Streamlit Path: (.+)/;
+                const streamlitMatch = result.match(streamlitRegex);
+                // this.streamlitProcess = exec(
+                //   `streamlit run {streamlitMatch[1]}`,
+                //   (error, stdout, stderr) => {
+                //     if (error) {
+                //       console.error(`exec error: ${error}`);
+                //     }
+                //   }
+                // );
+                // this.streamlitProcess.stdout?.on("data", (data) => {
+                //   const strData = data.toString();
+                //   const matches = strData.match(
+                //     /Local URL: (http:\/\/localhost:\d+)/
+                //   );
+                //   if (matches && matches.length > 1) {
+                //     const url = matches[1];
+                //     const panelProvider =
+                //       new AnalysisResultWebviewPanelProvider({
+                //         extensionUri: this.extensionUri,
+                //         viewType: "antiblock.analysis-result",
+                //         title: " Analysis Result",
+                //         column: vscode.ViewColumn.Two,
+                //       });
+                //     panelProvider.render();
+                //     panelProvider.onDidReceiveMessage(async (data) => {
+                //       const { type, payload } = data;
+                //       switch (type) {
+                //         case "init": {
+                //           panelProvider.panel.webview.postMessage({
+                //             type: "AnalysisReport",
+                //             payload: {
+                //               url,
+                //             },
+                //           });
+                //           break;
+                //         }
+                //       }
+                //     });
+                //   }
+                // });
+              } else {
+                vscode.window
+                  .showInformationMessage(
+                    "Vulnerabilities have not been detected.",
+                    "확인",
+                    "취소"
+                  )
+                  .then((value) => {
+                    if (value === "확인") {
+                      vscode.commands.executeCommand(
+                        "workbench.action.problems.focus"
+                      );
+                    }
+                  });
+              }
+              break;
+            }
+          }
+        }
+      }
     });
   }
+
+  private async analysis(
+    rule: string,
+    filePath: string
+  ): Promise<{
+    status: string;
+    message: string;
+  }> {
+    return new Promise((resolve, reject) => {
+      exec(`antibug detect ${rule} ${filePath}`, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`exec error: ${error}`);
+          vscode.window
+            .showInformationMessage(error.message, "확인", "취소")
+            .then((value) => {
+              if (value === "확인") {
+                vscode.commands.executeCommand(
+                  "workbench.action.problems.focus"
+                );
+              }
+            });
+        }
+        if (stderr) {
+          console.error(`stderr: ${stderr}`);
+          vscode.window.showInformationMessage(stderr);
+        }
+        return resolve({
+          status: "success",
+          message: stdout,
+        });
+      });
+    });
+  }
+
+  private async ExtractAuditReport(filePath: string, view: boolean) {
+    const fileContent = fs.readFileSync(filePath, "utf8");
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+
+    if (workspaceFolders && workspaceFolders.length > 0) {
+      const workspaceRoot = workspaceFolders[0].uri.fsPath;
+      const resultDir = path.join(workspaceRoot, "result");
+
+      if (!fs.existsSync(resultDir)) {
+        fs.mkdirSync(resultDir);
+      }
+
+      const fileNameWithoutExtension = path.basename(
+        filePath,
+        path.extname(filePath)
+      );
+      const newFileName = `${fileNameWithoutExtension}.md`;
+
+      const newFilePath = path.join(resultDir, newFileName);
+
+      fs.writeFileSync(newFilePath, fileContent, "utf8");
+
+      if (view) {
+        vscode.commands.executeCommand(
+          "markdown.showPreviewToSide",
+          vscode.Uri.file(newFilePath)
+        );
+      }
+    }
+  }
+
+  // private getAnalysisResult(filePath: string) {
+  //   try {
+  //     const fileContent = fs.readFileSync(filePath, "utf8");
+  //     const parsedData = JSON.parse(fileContent);
+  //     const detectors = [];
+
+  //     for (const key in parsedData) {
+  //       if (Object.prototype.hasOwnProperty.call(parsedData, key)) {
+  //         const obj = parsedData[key];
+  //         if (obj.results && obj.results.detector) {
+  //           detectors.push(obj.results.detector + ".test.js");
+  //         }
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     return [];
+  //   }
+  // }
 }

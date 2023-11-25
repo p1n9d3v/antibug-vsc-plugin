@@ -1,8 +1,5 @@
-.rule__list,
-.print__list,
-.language__list {
+.rule__list {
   max-height: 300px;
-  /* height: 75vh; */
   max-height: 80%;
   overflow-y: scroll;
   scroll-behavior: smooth;
@@ -12,37 +9,33 @@
   padding: 0px 8px 0;
 }
 
-.audit-report {
-  background: var(--button-background-tertiary);
-  margin-top: 14px;
+.analysis__files select {
+  padding-right: 50px;
+}
+
+.none__files :disabled {
+  display: none;
+}
+
+.button {
+  display: flex;
+  flex-direction: column;
+}
+
+.button button {
+  margin-bottom: 12px;
 }
 
 .analysis__run {
-  margin-top: 18px;
   background: var(--button-background-primary);
 }
 
-.analysis__run.loading::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 24px;
-  height: 24px;
-  margin: -16px;
-  border-radius: 50%;
-  border: 4px dotted #fff;
-  animation: spin 1s linear infinite;
+.unitTest {
+  background: var(--button-background-secondary);
 }
 
-.analysis__run.loading {
-  color: transparent;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+.auditReport {
+  background: var(--button-background-tertiary);
 }
 
 /* CHECKBOX START */
@@ -68,7 +61,7 @@
 }
 .rule__button input:checked ~ .checkbox__checkmark:after {
   opacity: 1;
-  top: -3px;
+  top: -8px;
 }
 .rule__button input:checked ~ .rule__text {
   background-position: 0 0;
@@ -95,8 +88,7 @@
 .rule__button .checkbox__checkmark:after {
   content: "";
   position: absolute;
-  left: 10px;
-  top: -15px;
+  left: 7px;
   width: 10px;
   height: 20px;
   border: solid #f1f3f5;
@@ -127,3 +119,15 @@
   transition: box-shadow 0.25s ease, background 1s ease, color 0.25s ease;
 }
 /* CHECKBOX END */
+
+.none__files {
+  display: flex;
+  gap: 12px;
+}
+
+.none__files::before,
+.none__files::after {
+  content: "";
+  border: 1px dashed #fff;
+  width: 30%;
+}

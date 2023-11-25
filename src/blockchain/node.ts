@@ -4,7 +4,7 @@ import { Chain, Hardfork, Common } from "@ethereumjs/common";
 import { RunTxResult, VM } from "@ethereumjs/vm";
 import { makeGenesisState, privateKeyToAddress } from "../util";
 import { Block } from "@ethereumjs/block";
-import { Address, bytesToHex, hexToBytes } from "@ethereumjs/util";
+import { Address, bigIntToHex, bytesToHex, hexToBytes } from "@ethereumjs/util";
 import {
   BlobEIP4844Transaction,
   FeeMarketEIP1559Transaction,
@@ -151,5 +151,35 @@ export default class AntiBlockNode {
 
   public getLatestBlock(): Block {
     return this.blockchain.getLatestBlock();
+  }
+
+  public async makeFeeMarketEIP1559Transaction({
+    value,
+    privateKey,
+    to,
+    callData,
+  }: {
+    value: string;
+    privateKey: string;
+    to?: string;
+    callData: string;
+  }): Promise<FeeMarketEIP1559Transaction> {
+    const latestBlock = this.getLatestBlock();
+    const nonce = await this.getNonce(privateKey);
+    const gasLimit = this.getEstimatedGasLimit(latestBlock);
+    const baseFee = latestBlock.header.calcNextBaseFee();
+
+    const txData = {
+      gasLimit: bigIntToHex(BigInt(gasLimit)),
+      value,
+      maxFeePerGas: baseFee,
+      nonce,
+      to,
+      data: callData,
+    };
+
+    return FeeMarketEIP1559Transaction.fromTxData(txData).sign(
+      hexToBytes(privateKey)
+    );
   }
 }

@@ -1,7 +1,6 @@
-const vscode = acquireVsCodeApi();
-const oldState = vscode.getState();
-
 (function () {
+  const vscode = acquireVsCodeApi();
+  const oldState = vscode.getState();
   $(window).ready(() => {
     vscode.postMessage({
       type: "init",
@@ -9,11 +8,7 @@ const oldState = vscode.getState();
   });
 
   $(".analysis__run").click(() => {
-    const selectedLanguages = [];
-    $(".language__list input[name=checkbox]:checked").each(function () {
-      const value = $(this).siblings(".rule__text").text();
-      selectedLanguages.push(value);
-    });
+    // $(".analysis__run").addClass("loading");
     const selectedSolFile = $(".analysis__files select").val();
     const selectedRules = [];
     $(".rule__list input[name=checkbox]:checked").each(function () {
@@ -21,22 +16,35 @@ const oldState = vscode.getState();
       selectedRules.push(value);
     });
 
-    const languagesString = selectedLanguages.join(" ");
-    const rulesString = selectedRules.join(" ");
+    if (selectedRules.length === 0) {
+      vscode.postMessage({
+        type: "error",
+        payload: {
+          errMsg: "Please select one or more rules.",
+        },
+      });
+    } else {
+      const rulesString = selectedRules.join(" ");
 
-    
-    vscode.postMessage({
-      type: "analysis",
-      payload: {
-        selectedLanguages: languagesString,
-        selectedRules: rulesString,
-        selectedSolFile,
-      },
-    });
+      vscode.setState({ rules: rulesString, files: selectedSolFile });
+
+      vscode.postMessage({
+        type: "RunAnalysis",
+        payload: {
+          rules: rulesString,
+          files: selectedSolFile,
+        },
+      });
+    }
   });
 
   $(".analysis__files select").change((event) => {
     const path = event.target.value;
+
+    // vscode.setState({
+    //   file: path,
+    // });
+
     vscode.postMessage({
       type: "changeFile",
       payload: {
@@ -45,10 +53,18 @@ const oldState = vscode.getState();
     });
   });
 
+  $(".auditReport__extract").click(() => {
+    vscode.postMessage({
+      type: "ExtractAuditReport",
+      payload: {},
+    });
+  });
+
   window.addEventListener("message", ({ data: { type, payload } }) => {
     switch (type) {
       case "init": {
-        const { solFiles } = payload;
+        const { solFiles, rules, files } = payload;
+        console.log("solFiles", solFiles);
 
         solFiles.forEach(({ path }) => {
           const optionElement = $("<option></option>");
@@ -57,12 +73,21 @@ const oldState = vscode.getState();
 
           $(".analysis__files select").append(optionElement);
         });
+
         break;
       }
 
       case "analysisResult": {
-        const { result } = payload;
-        break;
+        const AuditReportElement = $(".auditReport__extract");
+
+        const auditReportButtonExists =
+          AuditReportElement.find(".auditReport").length > 0;
+
+        if (!auditReportButtonExists) {
+          AuditReportElement.append(
+            `<button class="auditReport">Extract Audit Report</button>`
+          );
+        }
       }
     }
   });
