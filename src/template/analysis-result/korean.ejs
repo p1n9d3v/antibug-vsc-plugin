@@ -1,0 +1,285 @@
+<div id="korean" class="section-content" style="display: none">
+  <div class="container two-content">
+    <div class="box callgraph-box">
+      <div class="header-container">
+        <h3 class="container-header">컨트랙트 분석 요약<br />(Call-Graph)</h3>
+      </div>
+      <div class="content-container">
+        <div class="callgraph-container">
+          <!-- <div class="callgraph"></div> -->
+          <img src="call-graph.png" alt="call-graph" class="callgraph" />
+        </div>
+      </div>
+    </div>
+    <div class="box piechart-box">
+      <div class="header-container">
+        <h3 class="container-header">취약점 탐지 요약</h3>
+      </div>
+      <div class="piechart-container">
+        <div class="piechart1"></div>
+      </div>
+      <div class="content-container">
+        <div>
+          <div class="piechart-labels">
+            <div class="piechart-label">
+              <div class="label__color high"></div>
+              <p>높음</p>
+              4
+            </div>
+            <div class="piechart-label">
+              <div class="label__color medium"></div>
+              <p>중간</p>
+              12
+            </div>
+            <div class="piechart-label">
+              <div class="label__color low"></div>
+              <p>낮음</p>
+              9
+            </div>
+            <div class="piechart-label">
+              <div class="label__color info"></div>
+              <p>안내</p>
+              10
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container one-content">
+    <div class="box contract-box">
+      <div class="header-container">
+        <h3 class="container-header">컨트랙트 분석 결과</h3>
+      </div>
+      <div class="content-container">
+        <div class="item thead">
+          <input type="checkbox" id="thead" />
+          <label for="thead">
+            <button class="view-button">+</button>
+            <div class="contractName">컨트랙트 이름</div>
+            <div class="Inheritance">상속 관계</div>
+            <div class="StateVariable">상태 변수<br />(State Variable)</div>
+            <div class="Functions">함수 정보</div>
+            <div class="ExternalCalls">
+              외부 호출 함수<br />(External Calls)
+            </div>
+          </label>
+        </div>
+        <div class="item">
+          <input type="checkbox" id="tbody" />
+          <label for="tbody">
+            <button class="view-button">+</button>
+            <div class="contractName">Bar</div>
+            <div class="Inheritance">N/A</div>
+            <div class="StateVariable">N/A</div>
+            <div class="Functions">blockingFunction()</div>
+            <div class="ExternalCalls">N/A</div>
+          </label>
+          <div class="hidden-content">
+            <div class="function__info">
+              <p class="main-text">
+                <span class="subtitle">blockFunction()</span><br />
+              </p>
+              <table class="function__table">
+                <thead>
+                  <tr>
+                    <th>함수 시그니처<br />(Signature)</th>
+                    <th>가시성<br />(Visibility)</th>
+                    <th>함수 수정자<br />(Modifier)</th>
+                    <th>내부 호출 함수<br />(Internal Call)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th>0x04d11bde</th>
+                    <th>public</th>
+                    <th>-</th>
+                    <th>return(uint256, uint256)</th>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <input type="checkbox" id="tbody" />
+          <label for="tbody">
+            <button class="view-button">+</button>
+            <div class="contractName">Foo</div>
+            <div class="Inheritance">Bar</div>
+            <div class="StateVariable">N/A</div>
+            <div class="Functions">blockingFunction()<br />foo()</div>
+            <div class="ExternalCalls">N/A</div>
+          </label>
+          <div class="hidden-content">
+            <div class="function__info">
+              <p class="main-text">
+                <span class="subtitle">blockFunction()</span><br />
+              </p>
+
+              <table class="function__table">
+                <thead>
+                  <tr>
+                    <th>함수 시그니처<br />(Signature)</th>
+                    <th>가시성<br />(Visibility)</th>
+                    <th>함수 수정자<br />(Modifier)</th>
+                    <th>내부 호출 함수<br />(Internal Call)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th>0x04d11bde</th>
+                    <th>public</th>
+                    <th>-</th>
+                    <th>return(uint256, uint256)</th>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="function__info">
+              <p class="main-text"><span class="subtitle">foo()</span><br /></p>
+
+              <table class="function__table">
+                <thead>
+                  <tr>
+                    <th>함수 시그니처<br />(Signature)</th>
+                    <th>가시성<br />(Visibility)</th>
+                    <th>함수 수정자<br />(Modifier)</th>
+                    <th>내부 호출 함수<br />(Internal Call)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th>0xc2985578</th>
+                    <th>public</th>
+                    <th>-</th>
+                    <th>blockingFunction<br />require(bool, string)</th>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container one-content">
+    <div class="box contract-box">
+      <div class="header-container">
+        <h3 class="container-header">취약점 탐지 결과</h3>
+      </div>
+      <div class="content-container">
+        <div class="item thead">
+          <input type="checkbox" id="thead" />
+          <label for="thead">
+            <button class="view-button">+</button>
+            <div class="detector">취약점 탐지기</div>
+            <div class="impact">영향</div>
+            <div class="confidence">신뢰도</div>
+            <div class="codeLine">코드 라인</div>
+          </label>
+        </div>
+        <div class="item">
+          <input type="checkbox" id="tbody" />
+          <label for="tbody">
+            <button class="view-button">+</button>
+            <div class="detector">Inccorect-Return</div>
+            <div class="impact">
+              <div class="label__color high"></div>
+              High
+            </div>
+            <div class="confidence">
+              <div class="label__color medium"></div>
+              Medium
+            </div>
+            <div class="codeLine">Line 7</div>
+          </label>
+          <div class="hidden-content">
+            <div class="description">
+              <p class="main-text">
+                <span class="subtitle">정보</span><br />
+                함수 `Foo.foo()`가 함수 `Bar.blockingFunction()`를 호출하면,
+                `return(uint256,uint256)(0,0x20)`으로 인해 실행 흐름이
+                중단됩니다.
+              </p>
+              <p class="main-text">
+                <span class="subtitle">설명</span><br />
+                inline assembly block에 return이 사용되면 예기치 않은 실행
+                흐름이 중단될 수 있습니다.
+              </p>
+              <p class="main-text">
+                <span class="subtitle">권고사항</span><br />
+                0.6.0 이상 버전부터 leave 키워드가 등장하였습니다. 만약 이전
+                버전을 사용한다면, 0.6.0 이상 버전으로 변경한 후, solidity의
+                leave 문을 사용하세요.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <input type="checkbox" id="tbody" />
+          <label for="tbody">
+            <button class="view-button">+</button>
+            <div class="detector">Weak-PRNG</div>
+            <div class="impact">
+              <div class="label__color high"></div>
+              High
+            </div>
+            <div class="confidence">
+              <div class="label__color medium"></div>
+              Medium
+            </div>
+            <div class="codeLine">Line 11</div>
+          </label>
+          <div class="hidden-content">
+            <div class="description">
+              <p class="main-text">
+                <span class="subtitle">정보</span><br />
+                guess 함수는 블록 변수를 이용하여 난수를 생성합니다. IF _guess
+                == answer
+              </p>
+              <p class="main-text">
+                <span class="subtitle">설명</span><br />
+                블록체인에서는 완전한 난수를 생성할 수 없습니다. 완전한 난수가
+                생성되지 않는다는 것은 난수 생성에 대한 결과를 예측할 수 있어
+                조작을 할 수 있다는 것을 의미합니다.완전한 난수는 `atmospheric
+                noise`나 `user action` 등 예측할 수 없는 외부 요인에 의존해야
+                하지만, 스마트 컨트랙트는 이러한 요인에 직접적으로 접근할 수
+                없어 완전한 난수를 생성할 수 없습니다. 특히나, 스마트 컨트랙트는
+                개인키 생성 등 보안 메커니즘을 위해 사용하는 경우도 있으나,
+                공격자가 개인 키를 예측하여 계정이나 자금에 무단으로 액세스할
+                수도 있습니다.
+              </p>
+              <p class="main-text">
+                <span class="subtitle">개념</span><br />
+                체인에서 Randomness란?<br />- Randomness는 `pseudo-randomness`와
+                `true-randomness`로 구분할 수 있습니다.<br />-
+                `pseudo-randomness`는 결정론적 알고리즘에 의해 생성되며, 초기
+                시드 값을 알고 있다면 예측할 수 있습니다.<br />-
+                `true-randomness`는 엔트로피 소스에 의존하고 있어, 예측 불가능한
+                랜덤 값을 생성합니다.<br />- 블록체인 네트워크의 노드는 다양한
+                알고리즘을 이용해 `pseudo-randomness`를 생성할 수 있으며, 복권
+                당첨자 선정, 보상 분배, 게임에서 NFT 토큰 아이템의 희귀도,
+                전리품 분배 등의 시나리오에서 난수를 사용합니다.<br />- 그러나
+                블록체인은 네트워크의 모든 노드가 동일한 결론에 도달하도록
+                보장하기 때문에, 동일한 입력이 주어지면 컨트랙트의 출력은 항상
+                동일하다는 특징이 있습니다.
+              </p>
+              <p class="main-text">
+                <span class="subtitle">권고사항</span><br />
+                - `block.hash`, `block.timestamp`를 난수 생성을 위한 소스로
+                사용하지 않는 것이 좋습니다.<br />- 참가자가 미리 값을
+                commit하고, 모든 commit이 제출된 후 실제 값이 공개되는
+                방식(`Commit-Reveal Schemes`)으로 난수를 생성하는 것이
+                좋습니다.<br />- 여러 입력을 활용해 난수를 생성하는 탈중앙화
+                솔루션인 `Chainlink VRF(Verifiable Random Function)`를 활용하는
+                것이 좋습니다.<br />- 하드웨어 난수 생성기(RNG)를 사용해
+                공격자가 예측할 수 없는 무작위 값 생성하는 것이 좋습니다.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

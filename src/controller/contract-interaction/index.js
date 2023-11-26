@@ -2,6 +2,17 @@ const vscode = acquireVsCodeApi();
 const oldState = vscode.getState();
 
 (function () {
+  $(window).ready(() => {
+    vscode.postMessage({
+      type: "init",
+    });
+  });
+
+  $(".result__info-title").click(function () {
+    $(this).next(".result__info-data").toggle("hidden");
+    $(this).find(".fa-chevron-down").toggleClass("rotate");
+  });
+
   window.addEventListener("message", ({ data: { type, payload } }) => {
     switch (type) {
       case "init": {

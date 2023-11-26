@@ -4,6 +4,10 @@
   $(window).ready(() => {
     vscode.postMessage({
       type: "init",
+      payload: {
+        // rules: oldState.rules,
+        // files: oldState.files,
+      },
     });
   });
 
@@ -26,7 +30,7 @@
     } else {
       const rulesString = selectedRules.join(" ");
 
-      vscode.setState({ rules: rulesString, files: selectedSolFile });
+      // vscode.setState({ rules: rulesString, files: selectedSolFile });
 
       vscode.postMessage({
         type: "RunAnalysis",
@@ -53,18 +57,22 @@
     });
   });
 
-  $(".auditReport__extract").click(() => {
-    vscode.postMessage({
-      type: "ExtractAuditReport",
-      payload: {},
-    });
-  });
+  // $(".auditReport__extract").click(() => {
+  //   vscode.postMessage({
+  //     type: "ExtractAuditReport",
+  //     payload: {},
+  //   });
+  // });
 
   window.addEventListener("message", ({ data: { type, payload } }) => {
     switch (type) {
       case "init": {
+<<<<<<< HEAD
         const { solFiles, rules, files } = payload;
         console.log("solFiles", solFiles);
+=======
+        const { solFiles } = payload;
+>>>>>>> ffcbdd7 (feat(analysis-result): html,css 완료)
 
         solFiles.forEach(({ path }) => {
           const optionElement = $("<option></option>");

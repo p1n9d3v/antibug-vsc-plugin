@@ -1,30 +1,45 @@
 const vscode = acquireVsCodeApi();
 const oldState = vscode.getState();
 
-(function () {
-  $(window).ready(() => {
-    vscode.postMessage({
-      type: "init",
-    });
+$(window).ready(() => {
+  vscode.postMessage({
+    type: "init",
+  });
+});
+
+const items = document.querySelectorAll(".content-container .item");
+
+items.forEach((item) => {
+  const button = item.querySelector(".view-button");
+  const hiddenContent = item.querySelector(".hidden-content");
+
+  button.addEventListener("click", () => {
+    const currentHiddenContent = item.querySelector(".hidden-content");
+    currentHiddenContent.style.display =
+      currentHiddenContent.style.display === "block" ? "none" : "block";
+
+    button.textContent =
+      button.textContent === "+"
+        ? button.textContent.replace("+", "-")
+        : button.textContent.replace("-", "+");
   });
 
-  window.addEventListener("message", ({ data: { type, payload } }) => {
-    switch (type) {
-      case "init": {
-        const { OutputDirectoryPath } = payload;
-        const CallgraphElement = $(".Callgraph");
-        const CallgraphPath =
-          OutputDirectoryPath + "/call_graph_results/call-graph.png";
-        console.log(CallgraphPath);
-        CallgraphElement.append(`<img src="${CallgraphPath}" />`);
-      }
-      // case "AnalysisReport": {
-      //   const { url } = payload;
+  if (item !== items[0]) {
+    button.style.pointerEvents = "none";
+  }
+});
 
-      //   const iframe = document.querySelector(".ifram");
-      //   iframe.src = url;
-      //   break;
-      // }
+window.addEventListener("message", ({ data: { type, payload } }) => {
+  switch (type) {
+    case "init": {
+      const {
+        Filename,
+        contractAnalysisContent,
+        detectorContent,
+        auditReportContent,
+        callGraphResultPath,
+      } = payload;
+      break;
     }
-  });
-})();
+  }
+});

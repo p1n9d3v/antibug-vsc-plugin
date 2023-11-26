@@ -87,20 +87,49 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
             }
           }
 
-          vscode.commands.executeCommand(
-            "markdown.showPreviewToSide",
-            vscode.Uri.file(
-              "/Users/dlanara/Desktop/immm/ProtocolCamp/dev/antiblock/Welcome.md"
-            ),
-            vscode.ViewColumn.Two
-          );
-
           this.view?.webview.postMessage({
             type: "init",
             payload: {
               solFiles,
             },
           });
+
+          // const panelProvider = new AnalysisResultWebviewPanelProvider({
+          //   extensionUri: this.extensionUri,
+          //   viewType: "antiblock.analysis-result",
+          //   title: " Analysis Result",
+          //   column: vscode.ViewColumn.Two,
+          // });
+          // panelProvider.render();
+          // panelProvider.onDidReceiveMessage(async (data) => {
+          //   const { type, payload } = data;
+          //   switch (type) {
+          //     case "init": {
+          //       panelProvider.panel.webview.postMessage({
+          //         type: "init",
+          //         payload: {},
+          //       });
+          //     }
+
+          //     case "ExtractAuditReport": {
+          //       if (this.auditReportKR && this.auditReportEN) {
+          //         await this.ExtractAuditReport(this.auditReportKR, false);
+          //         await this.ExtractAuditReport(this.auditReportEN, false);
+          //       } else {
+          //         vscode.window
+          //           .showInformationMessage("", "확인", "취소")
+          //           .then((value) => {
+          //             if (value === "확인") {
+          //               vscode.commands.executeCommand(
+          //                 "workbench.action.problems.focus"
+          //               );
+          //             }
+          //           });
+          //       }
+          //       break;
+          //     }
+          //   }
+          // });
           break;
         }
 
@@ -148,24 +177,6 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
           break;
         }
 
-        case "ExtractAuditReport": {
-          if (this.auditReportKR && this.auditReportEN) {
-            await this.ExtractAuditReport(this.auditReportKR, false);
-            await this.ExtractAuditReport(this.auditReportEN, false);
-          } else {
-            vscode.window
-              .showInformationMessage("", "확인", "취소")
-              .then((value) => {
-                if (value === "확인") {
-                  vscode.commands.executeCommand(
-                    "workbench.action.problems.focus"
-                  );
-                }
-              });
-          }
-          break;
-        }
-
         case "RunAnalysis": {
           const { rules, files } = payload;
           if (files === "Select a file to analyze") {
@@ -194,18 +205,50 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
               const OutputDirectoryMatch = result.match(OutputDirectoryRegex);
 
               if (OutputDirectoryMatch && OutputDirectoryMatch.length > 1) {
-                const OutputDirectoryPath = OutputDirectoryMatch[1].trim();
+                const outputDirectoryPath = OutputDirectoryMatch[1].trim();
 
                 this.auditReportEN = path.join(
-                  OutputDirectoryPath,
+                  outputDirectoryPath,
                   "/audit_report",
                   Filename + "_en.md"
                 );
                 this.auditReportKR = path.join(
-                  OutputDirectoryPath,
+                  outputDirectoryPath,
                   "/audit_report",
                   Filename + "_kr.md"
                 );
+
+                // this.view?.webview.postMessage({
+                //   type: "analysisResult",
+                //   payload: {},
+                // });
+
+                // Path 값 설정
+                const contractAnalysisResultPath =
+                  outputDirectoryPath +
+                  "/contract_analysis_json_results/" +
+                  Filename +
+                  ".json";
+
+                const detectorResultPath =
+                  outputDirectoryPath +
+                  "/detector_json_results/" +
+                  Filename +
+                  "_kr.json";
+
+                const callGraphResultPath =
+                  outputDirectoryPath +
+                  "/call_graph_json_results/" +
+                  Filename +
+                  ".json";
+
+                const auditReportPath =
+                  outputDirectoryPath +
+                  "/call_graph_results/" +
+                  "call-graph.png";
+
+                console.log("====================================");
+
                 const panelProvider = new AnalysisResultWebviewPanelProvider({
                   extensionUri: this.extensionUri,
                   viewType: "antiblock.analysis-result",
@@ -219,18 +262,45 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
                     case "init": {
                       panelProvider.panel.webview.postMessage({
                         type: "init",
-                        payload: {
-                          OutputDirectoryPath,
-                        },
+                        payload: {},
                       });
+                    }
+
+                    case "ExtractAuditReport": {
+                      console.log("====================================");
+                      if (this.auditReportKR && this.auditReportEN) {
+                        await this.ExtractAuditReport(
+                          this.auditReportKR,
+                          false
+                        );
+                        await this.ExtractAuditReport(
+                          this.auditReportEN,
+                          false
+                        );
+                      } else {
+                        vscode.window
+                          .showInformationMessage("", "확인", "취소")
+                          .then((value) => {
+                            if (value === "확인") {
+                              vscode.commands.executeCommand(
+                                "workbench.action.problems.focus"
+                              );
+                            }
+                          });
+                      }
                       break;
                     }
                   }
                 });
-                const streamlitRegex = /Streamlit Path: (.+)/;
-                const streamlitMatch = result.match(streamlitRegex);
+
+                // streamlit을 하게 된다면 이후에 실행하는 부분
+                // const streamlitRegex = /Streamlit Path: (.+)/;
+                // const streamlitMatch = result.match(streamlitRegex);
+
+                // if (streamlitMatch) {
+                // const streamlitPath = streamlitMatch[1];
                 // this.streamlitProcess = exec(
-                //   `streamlit run {streamlitMatch[1]}`,
+                //   `streamlit run ${streamlitPath}`,
                 //   (error, stdout, stderr) => {
                 //     if (error) {
                 //       console.error(`exec error: ${error}`);
@@ -243,31 +313,29 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
                 //     /Local URL: (http:\/\/localhost:\d+)/
                 //   );
                 //   if (matches && matches.length > 1) {
-                //     const url = matches[1];
-                //     const panelProvider =
-                //       new AnalysisResultWebviewPanelProvider({
-                //         extensionUri: this.extensionUri,
-                //         viewType: "antiblock.analysis-result",
-                //         title: " Analysis Result",
-                //         column: vscode.ViewColumn.Two,
+                //     const url = "http://localhost:8502";
+                // const panelProvider = new AnalysisResultWebviewPanelProvider({
+                //   extensionUri: this.extensionUri,
+                //   viewType: "antiblock.analysis-result",
+                //   title: " Analysis Result",
+                //   column: vscode.ViewColumn.Beside,
+                // });
+                // panelProvider.render();
+                // panelProvider.onDidReceiveMessage(async (data) => {
+                //   const { type, payload } = data;
+                //   switch (type) {
+                //     case "init": {
+                //       panelProvider.panel.webview.postMessage({
+                //         type: "AnalysisReport",
+                //         payload: {},
                 //       });
-                //     panelProvider.render();
-                //     panelProvider.onDidReceiveMessage(async (data) => {
-                //       const { type, payload } = data;
-                //       switch (type) {
-                //         case "init": {
-                //           panelProvider.panel.webview.postMessage({
-                //             type: "AnalysisReport",
-                //             payload: {
-                //               url,
-                //             },
-                //           });
-                //           break;
-                //         }
-                //       }
-                //     });
+                //       break;
+                //     }
                 //   }
                 // });
+                // } else {
+                //   console.error("Streamlit Path not found in the result");
+                // }
               } else {
                 vscode.window
                   .showInformationMessage(
