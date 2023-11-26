@@ -1,0 +1,238 @@
+<div class="content">
+  <div class="two-container">
+    <div class="box" id="contract-summary">
+      <div class="box__header">
+        <h3 class="box__header-title">Contract Summary</h3>
+      </div>
+      <div class="box__content">
+        <div class="box__content-tab">
+          <button class="menu1 on">contract</button>
+          <button class="menu2">callgraph</button>
+        </div>
+        <div class="box__content-content1">
+          <div class="contract__graph">
+            <div class="contract"></div>
+          </div>
+        </div>
+        <div class="box__content-content2">
+          <div class="callgraph__graph">
+            <div class="callgraph"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="box" id="detect-summary">
+      <div class="box__header">
+        <h3 class="box__header-title">Security Summary</h3>
+      </div>
+      <div class="box__content">
+        <div class="box__content-chart">
+          <div class="piechart"></div>
+        </div>
+        <div class="box__content-labels">
+          <div class="chart-label">
+            <div class="state__color high"></div>
+            <p>High</p>
+            4
+          </div>
+          <div class="chart-label">
+            <div class="state__color medium"></div>
+            <p>Medium</p>
+            12
+          </div>
+          <div class="chart-label">
+            <div class="state__color low"></div>
+            <p>Low</p>
+            9
+          </div>
+          <div class="chart-label">
+            <div class="state__color info"></div>
+            <p>Info</p>
+            10
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 컨트랙트 분석 결과 -->
+  <div class="one-container">
+    <div class="box" id="contract-info">
+      <div class="box__header">
+        <h3 class="box__header-title">Contract Analysis Result</h3>
+      </div>
+      <div class="box__content">
+        <div class="box__content-result">
+          <div class="result__item thead">
+            <div class="result__tr">
+              <button class="result__td-button">+</button>
+              <div class="result__td-contractName">Contract<br />Name</div>
+              <div class="result__td-inheritance">Inheritance</div>
+              <div class="result__td-stateVariable">State<br />Variable</div>
+              <div class="result__td-functions">Function<br />Summaries</div>
+              <div class="result__td-externalCall">External<br />Calls</div>
+            </div>
+          </div>
+          <div class="result__item">
+            <div class="result__tr">
+              <button class="result__td-button">+</button>
+              <div class="result__td-contractName">Bar</div>
+              <div class="result__td-inheritance">N/A</div>
+              <div class="result__td-stateVariable">N/A</div>
+              <div class="result__td-functions">blockFunction()</div>
+              <div class="result__td-externalCall">N/A</div>
+            </div>
+            <div class="result__hidden">
+              <div class="result__hidden-title">blockFunction()</div>
+              <table class="result__hidden-table">
+                <thead>
+                  <tr>
+                    <th>Signature</th>
+                    <th>Visibility</th>
+                    <th>Modifiers</th>
+                    <th>Internal Call</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th>0x04d11bde</th>
+                    <th>public</th>
+                    <th>N/A</th>
+                    <th>return(uint256, uint256)</th>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="result__item">
+            <div class="result__tr">
+              <button class="result__td-button">+</button>
+              <div class="result__td-contractName">Foo</div>
+              <div class="result__td-inheritance">Bar</div>
+              <div class="result__td-stateVariable">N/A</div>
+              <div class="result__td-functions">blockFunction()<br />foo()</div>
+              <div class="result__td-externalCall">N/A</div>
+            </div>
+            <div class="result__hidden">
+              <div class="result__hidden-title">blockFunction()</div>
+              <table class="result__hidden-table">
+                <thead>
+                  <tr>
+                    <th>Signature</th>
+                    <th>Visibility</th>
+                    <th>Modifiers</th>
+                    <th>Internal Call</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th>0xc2985578</th>
+                    <th>public</th>
+                    <th>N/A</th>
+                    <th>
+                      blockingFunction<br />
+                      require(bool, string)
+                    </th>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 취약점 탐지 결과 -->
+  <div class="one-container">
+    <div class="box" id="detect-info">
+      <div class="box__header">
+        <h3 class="box__header-title">Security Analysis Result</h3>
+      </div>
+      <div class="box__content">
+        <div class="box__content-result">
+          <div class="result__item thead">
+            <div class="result__tr">
+              <button class="result__td-button">+</button>
+              <div class="detector">Detector</div>
+              <div class="impact">Impact</div>
+              <div class="confidence">Confidence</div>
+              <div class="codeline">Code Line</div>
+            </div>
+          </div>
+          <div class="result__item">
+            <div class="result__tr">
+              <button class="result__td-button">+</button>
+              <div class="detector">Inccorect-Return</div>
+              <div class="impact">
+                <div class="state__color high"></div>
+                High
+              </div>
+              <div class="confidence">
+                <div class="state__color medium"></div>
+                Medium
+              </div>
+              <div class="codeline">Line 7</div>
+            </div>
+            <div class="result__hidden">
+              <div class="result__hidden-title">설명</div>
+              <div class="result__hidden-content">
+                <li>
+                  Using 'return' in an inline assembly block may cause
+                  unexpected interruptions in the execution flow.
+                </li>
+              </div>
+              <div class="result__hidden-title">권고사항</div>
+              <div class="result__hidden-content">
+                <li>
+                  If you are currently using a version earlier than 0.6.0, after
+                  upgrading to version 0.6.0 or higher, utilize the 'leave'
+                  statement in Solidity.
+                </li>
+              </div>
+            </div>
+          </div>
+          <div class="result__item">
+            <div class="result__tr">
+              <button class="result__td-button">+</button>
+              <div class="detector">Weak-PRNG</div>
+              <div class="impact">
+                <div class="state__color high"></div>
+                High
+              </div>
+              <div class="confidence">
+                <div class="state__color medium"></div>
+                Medium
+              </div>
+              <div class="codeline">Line 11</div>
+            </div>
+            <div class="result__hidden">
+              <div class="result__hidden-title">설명</div>
+              <div class="result__hidden-content">
+                <li>
+                  In blockchain, it's impossible to generate completely random
+                  numbers. Smart contracts rely on external factors such as
+                  block data or external oracles to generate randomness, hence
+                  true randomness cannot be guaranteed.
+                </li>
+              </div>
+              <div class="result__hidden-title">권고사항</div>
+              <div class="result__hidden-content">
+                <li>
+                  It's advisable not to use 'block.hash' or 'block.timestamp'
+                  for random number generation.
+                </li>
+                <li>
+                  It's recommended to utilize decentralized solutions like
+                  Chainlink VRF (Verifiable Random Function) to generate
+                  unpredictable random values or numbers using various inputs,
+                  or to use hardware random number generators (RNG).
+                </li>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

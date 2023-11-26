@@ -44,11 +44,6 @@
 
   $(".analysis__files select").change((event) => {
     const path = event.target.value;
-
-    // vscode.setState({
-    //   file: path,
-    // });
-
     vscode.postMessage({
       type: "changeFile",
       payload: {
@@ -56,13 +51,6 @@
       },
     });
   });
-
-  // $(".auditReport__extract").click(() => {
-  //   vscode.postMessage({
-  //     type: "ExtractAuditReport",
-  //     payload: {},
-  //   });
-  // });
 
   window.addEventListener("message", ({ data: { type, payload } }) => {
     switch (type) {

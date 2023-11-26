@@ -10,9 +10,6 @@ import { exec, ChildProcess } from "child_process";
 export default class SecurityAnalysisViewProvider extends WebviewProvider {
   private auditReportKR?: string;
   private auditReportEN?: string;
-  // private detectResultKR?: string;
-  // private detectResultEN?: string;
-  private streamlitProcess?: ChildProcess;
 
   constructor({
     extensionUri,
@@ -93,43 +90,6 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
               solFiles,
             },
           });
-
-          // const panelProvider = new AnalysisResultWebviewPanelProvider({
-          //   extensionUri: this.extensionUri,
-          //   viewType: "antiblock.analysis-result",
-          //   title: " Analysis Result",
-          //   column: vscode.ViewColumn.Two,
-          // });
-          // panelProvider.render();
-          // panelProvider.onDidReceiveMessage(async (data) => {
-          //   const { type, payload } = data;
-          //   switch (type) {
-          //     case "init": {
-          //       panelProvider.panel.webview.postMessage({
-          //         type: "init",
-          //         payload: {},
-          //       });
-          //     }
-
-          //     case "ExtractAuditReport": {
-          //       if (this.auditReportKR && this.auditReportEN) {
-          //         await this.ExtractAuditReport(this.auditReportKR, false);
-          //         await this.ExtractAuditReport(this.auditReportEN, false);
-          //       } else {
-          //         vscode.window
-          //           .showInformationMessage("", "확인", "취소")
-          //           .then((value) => {
-          //             if (value === "확인") {
-          //               vscode.commands.executeCommand(
-          //                 "workbench.action.problems.focus"
-          //               );
-          //             }
-          //           });
-          //       }
-          //       break;
-          //     }
-          //   }
-          // });
           break;
         }
 
@@ -200,7 +160,7 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
             const result = stdout.message;
 
             if (result.match(/Detecting specific vulnerabilities/)) {
-              const Filename = path.basename(files, path.extname(files));
+              const filename = path.basename(files, path.extname(files));
               const OutputDirectoryRegex = /Output Directory: (.+)/;
               const OutputDirectoryMatch = result.match(OutputDirectoryRegex);
 
@@ -210,44 +170,37 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
                 this.auditReportEN = path.join(
                   outputDirectoryPath,
                   "/audit_report",
-                  Filename + "_en.md"
+                  filename + "_en.md"
                 );
                 this.auditReportKR = path.join(
                   outputDirectoryPath,
                   "/audit_report",
-                  Filename + "_kr.md"
+                  filename + "_kr.md"
                 );
-
-                // this.view?.webview.postMessage({
-                //   type: "analysisResult",
-                //   payload: {},
-                // });
 
                 // Path 값 설정
                 const contractAnalysisResultPath =
                   outputDirectoryPath +
                   "/contract_analysis_json_results/" +
-                  Filename +
+                  filename +
                   ".json";
 
                 const detectorResultPath =
                   outputDirectoryPath +
                   "/detector_json_results/" +
-                  Filename +
+                  filename +
                   "_kr.json";
 
                 const callGraphResultPath =
                   outputDirectoryPath +
                   "/call_graph_json_results/" +
-                  Filename +
+                  filename +
                   ".json";
 
                 const auditReportPath =
                   outputDirectoryPath +
                   "/call_graph_results/" +
                   "call-graph.png";
-
-                console.log("====================================");
 
                 const panelProvider = new AnalysisResultWebviewPanelProvider({
                   extensionUri: this.extensionUri,
@@ -262,12 +215,12 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
                     case "init": {
                       panelProvider.panel.webview.postMessage({
                         type: "init",
-                        payload: {},
+                        payload: { filename },
                       });
                     }
 
                     case "ExtractAuditReport": {
-                      console.log("====================================");
+                      console.log("===============");
                       if (this.auditReportKR && this.auditReportEN) {
                         await this.ExtractAuditReport(
                           this.auditReportKR,
@@ -290,52 +243,72 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
                       }
                       break;
                     }
+
+                    case "codeLine": {
+                      const { codeLine, impact } = payload;
+                      const lineParts = codeLine.split(" ");
+                      const lineNumber = parseInt(
+                        lineParts[lineParts.length - 1]
+                      );
+
+                      let decorationType;
+                      let defaultDecorationType;
+
+                      const highSeverityDecorationType =
+                        vscode.window.createTextEditorDecorationType({
+                          backgroundColor: "#ef6666",
+                        });
+
+                      const mediumSeverityDecorationType =
+                        vscode.window.createTextEditorDecorationType({
+                          backgroundColor: "#fac858",
+                        });
+
+                      const lowSeverityDecorationType =
+                        vscode.window.createTextEditorDecorationType({
+                          backgroundColor: "#92cc76",
+                        });
+
+                      const infoDecorationType =
+                        vscode.window.createTextEditorDecorationType({
+                          backgroundColor: "#5470c6",
+                        });
+
+                      switch (impact) {
+                        case "high":
+                          decorationType = highSeverityDecorationType;
+                          break;
+                        case "medium":
+                          decorationType = mediumSeverityDecorationType;
+                          break;
+                        case "low":
+                          decorationType = lowSeverityDecorationType;
+                          break;
+                        case "info":
+                          decorationType = infoDecorationType;
+                          break;
+                        default:
+                          defaultDecorationType =
+                            vscode.window.createTextEditorDecorationType({
+                              backgroundColor: "#ffffff",
+                            });
+                          decorationType = defaultDecorationType;
+                          break;
+                      }
+
+                      const activeEditor = vscode.window.activeTextEditor;
+
+                      if (activeEditor) {
+                        const range = activeEditor.document.lineAt(
+                          lineNumber - 1
+                        ).range;
+
+                        activeEditor.setDecorations(decorationType, [range]);
+                      }
+                      break;
+                    }
                   }
                 });
-
-                // streamlit을 하게 된다면 이후에 실행하는 부분
-                // const streamlitRegex = /Streamlit Path: (.+)/;
-                // const streamlitMatch = result.match(streamlitRegex);
-
-                // if (streamlitMatch) {
-                // const streamlitPath = streamlitMatch[1];
-                // this.streamlitProcess = exec(
-                //   `streamlit run ${streamlitPath}`,
-                //   (error, stdout, stderr) => {
-                //     if (error) {
-                //       console.error(`exec error: ${error}`);
-                //     }
-                //   }
-                // );
-                // this.streamlitProcess.stdout?.on("data", (data) => {
-                //   const strData = data.toString();
-                //   const matches = strData.match(
-                //     /Local URL: (http:\/\/localhost:\d+)/
-                //   );
-                //   if (matches && matches.length > 1) {
-                //     const url = "http://localhost:8502";
-                // const panelProvider = new AnalysisResultWebviewPanelProvider({
-                //   extensionUri: this.extensionUri,
-                //   viewType: "antiblock.analysis-result",
-                //   title: " Analysis Result",
-                //   column: vscode.ViewColumn.Beside,
-                // });
-                // panelProvider.render();
-                // panelProvider.onDidReceiveMessage(async (data) => {
-                //   const { type, payload } = data;
-                //   switch (type) {
-                //     case "init": {
-                //       panelProvider.panel.webview.postMessage({
-                //         type: "AnalysisReport",
-                //         payload: {},
-                //       });
-                //       break;
-                //     }
-                //   }
-                // });
-                // } else {
-                //   console.error("Streamlit Path not found in the result");
-                // }
               } else {
                 vscode.window
                   .showInformationMessage(
@@ -422,24 +395,4 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
       }
     }
   }
-
-  // private getAnalysisResult(filePath: string) {
-  //   try {
-  //     const fileContent = fs.readFileSync(filePath, "utf8");
-  //     const parsedData = JSON.parse(fileContent);
-  //     const detectors = [];
-
-  //     for (const key in parsedData) {
-  //       if (Object.prototype.hasOwnProperty.call(parsedData, key)) {
-  //         const obj = parsedData[key];
-  //         if (obj.results && obj.results.detector) {
-  //           detectors.push(obj.results.detector + ".test.js");
-  //         }
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //     return [];
-  //   }
-  // }
 }
