@@ -1,6 +1,6 @@
 const vscode = acquireVsCodeApi();
 let selectedContract = {};
-
+let selectedAccount = {};
 $(window).ready(() => {
   vscode.postMessage({
     type: "init",
@@ -36,6 +36,11 @@ $(".interaction__from-list select").change((event) => {
   const address = optionElement.text().split("(")[0];
   const balance = optionElement.text().split("(")[1].split(")")[0];
 
+  const selectedAccount = {
+    address,
+    privateKey,
+    balance,
+  };
   vscode.postMessage({
     type: "changeAccount",
     payload: {
@@ -49,7 +54,6 @@ $(".interaction__from-list select").change((event) => {
 });
 
 $(".interaction__value-amount").change(() => {
-  const { selectedAccount } = vscode.getState();
   const amount = $(".interaction__value-amount input").val();
   const type = $(".interaction__value-amount select").val();
 
@@ -74,7 +78,6 @@ $(".interaction__value-amount").change(() => {
 });
 
 $(".interaction__from .copy").click(() => {
-  const { selectedAccount } = vscode.getState();
   navigator.clipboard.writeText(selectedAccount.address);
 });
 
