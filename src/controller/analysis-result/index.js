@@ -6,7 +6,12 @@ $(document).ready(() => {
     type: "init",
   });
 
-
+  $(".extract").click(() => {
+    vscode.postMessage({
+      type: "ExtractAuditReport",
+      payload: {},
+    });
+  });
 
   window.addEventListener("message", ({ data: { type, payload } }) => {
     switch (type) {

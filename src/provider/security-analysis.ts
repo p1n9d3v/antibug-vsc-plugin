@@ -205,7 +205,7 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
                 const panelProvider = new AnalysisResultWebviewPanelProvider({
                   extensionUri: this.extensionUri,
                   viewType: "antiblock.analysis-result",
-                  title: " Analysis Result",
+                  title: "Analysis Result (" + filename + ".sol)",
                   column: vscode.ViewColumn.Two,
                 });
                 panelProvider.render();
@@ -217,6 +217,7 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
                         type: "init",
                         payload: { files },
                       });
+                      break;
                     }
 
                     case "ExtractAuditReport": {
