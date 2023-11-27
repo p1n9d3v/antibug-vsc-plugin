@@ -220,7 +220,6 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
                     }
 
                     case "ExtractAuditReport": {
-                      console.log("===============");
                       if (this.auditReportKR && this.auditReportEN) {
                         await this.ExtractAuditReport(
                           this.auditReportKR,

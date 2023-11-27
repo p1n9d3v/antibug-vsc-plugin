@@ -44,6 +44,11 @@
 
   $(".analysis__files select").change((event) => {
     const path = event.target.value;
+
+    // vscode.setState({
+    //   file: path,
+    // });
+
     vscode.postMessage({
       type: "changeFile",
       payload: {
@@ -52,15 +57,17 @@
     });
   });
 
+  // $(".auditReport__extract").click(() => {
+  //   vscode.postMessage({
+  //     type: "ExtractAuditReport",
+  //     payload: {},
+  //   });
+  // });
+
   window.addEventListener("message", ({ data: { type, payload } }) => {
     switch (type) {
       case "init": {
-<<<<<<< HEAD
-        const { solFiles, rules, files } = payload;
-        console.log("solFiles", solFiles);
-=======
         const { solFiles } = payload;
->>>>>>> ffcbdd7 (feat(analysis-result): html,css 완료)
 
         solFiles.forEach(({ path }) => {
           const optionElement = $("<option></option>");

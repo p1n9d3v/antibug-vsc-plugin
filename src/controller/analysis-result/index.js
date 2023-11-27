@@ -6,13 +6,21 @@ $(document).ready(() => {
     type: "init",
   });
 
+  const headerElement = $(".header");
+  headerElement.find("button").click(() => {
+    vscode.postMessage({
+      type: "ExtractAuditReport",
+      payload: {},
+    });
+  });
+
   window.addEventListener("message", ({ data: { type, payload } }) => {
     switch (type) {
       case "init": {
         initializeUI();
         viewHiddenContent();
-        initializePieChart();
-        initializeContract();
+        ContractAnalysisTab();
+        initializeDetect();
 
         $(".result__item").on("click", ".result__tr", (event) => {
           const clickedElement = $(event.currentTarget);
@@ -27,6 +35,7 @@ $(document).ready(() => {
             },
           });
         });
+
         break;
       }
     }
@@ -59,14 +68,6 @@ function initializeUI() {
 }
 
 function viewHiddenContent() {
-  const headerElement = $(".header");
-  headerElement.find("button").click(() => {
-    vscode.postMessage({
-      type: "ExtractAuditReport",
-      payload: {},
-    });
-  });
-
   $(".result__item").each((index, item) => {
     const button = $(item).find(".result__td-button");
     const hiddenContent = $(item).find(".result__hidden");
@@ -86,7 +87,40 @@ function viewHiddenContent() {
   });
 }
 
-function initializePieChart() {
+function ContractAnalysisTab() {
+  const contractButton = $(".box__content button.menu1");
+  const callgraphButton = $(".box__content button.menu2");
+  const contractContent = $(".box__content-contract");
+  const callgraphContent = $(".box__content-callgraph");
+
+  contractButton.click(() => {
+    contractContent.css("display", "block");
+    callgraphContent.css("display", "none");
+    contractButton.css("background-color", "#4e52d0");
+    contractButton.css("color", "#fff");
+    callgraphButton.css("background-color", "#fff");
+    callgraphButton.css("color", "#4e52d0");
+  });
+
+  callgraphButton.click(() => {
+    contractContent.css("display", "none");
+    callgraphContent.css("display", "block");
+    contractButton.css("background-color", "#fff");
+    contractButton.css("color", "#4e52d0");
+    callgraphButton.css("background-color", "#4e52d0");
+    callgraphButton.css("color", "#fff");
+  });
+
+  contractContent.css("display", "block");
+  callgraphContent.css("display", "none");
+
+  contractButton.css("background-color", "#4e52d0");
+  contractButton.css("color", "#fff");
+  callgraphButton.css("background-color", "#fff");
+  callgraphButton.css("color", "#4e52d0");
+}
+
+function initializeDetect() {
   const dom = document.querySelector(".piechart");
   const myChart_piechart = echarts.init(dom, null, {
     renderer: "canvas",
@@ -137,86 +171,5 @@ function initializePieChart() {
     myChart_piechart.setOption(option);
   }
 
-  window.addEventListener("resize", myChart.resize);
-}
-
-function initializeContract() {
-  var callGraphElement = document.getElementById("contract");
-  var myChart_contract = echarts.init(callGraphElement);
-
-  var option = {
-    title: {
-      text: "",
-      left: "center",
-    },
-    series: [
-      {
-        type: "graph",
-        layout: "force",
-        roam: true,
-        force: {
-          repulsion: 1000,
-        },
-        data: [
-          { name: "solidity", symbolSize: 80 },
-          { name: "GuessTheRandomNumber", symbolSize: 60 },
-          { name: "constructor", symbolSize: 40 },
-          { name: "require(bool,string)", symbolSize: 30 },
-          { name: "blockhash(uint256)", symbolSize: 30 },
-          { name: "abi.encodePacked()", symbolSize: 30 },
-          { name: "keccak256(bytes)", symbolSize: 30 },
-          { name: "guess", symbolSize: 30 },
-        ],
-        links: [
-          {
-            source: "solidity",
-            target: "GuessTheRandomNumber",
-            lineStyle: { curveness: 0.2 },
-          },
-          {
-            source: "GuessTheRandomNumber",
-            target: "constructor",
-            lineStyle: { curveness: 0.2 },
-          },
-          {
-            source: "solidity",
-            target: "require(bool,string)",
-            lineStyle: { curveness: 0.2 },
-          },
-          {
-            source: "solidity",
-            target: "blockhash(uint256)",
-            lineStyle: { curveness: 0.2 },
-          },
-          {
-            source: "solidity",
-            target: "abi.encodePacked()",
-            lineStyle: { curveness: 0.2 },
-          },
-          {
-            source: "solidity",
-            target: "keccak256(bytes)",
-            lineStyle: { curveness: 0.2 },
-          },
-          {
-            source: "GuessTheRandomNumber",
-            target: "guess",
-            lineStyle: { curveness: 0.2 },
-          },
-        ],
-        label: {
-          show: true,
-          position: "inside",
-          formatter: "{b}",
-        },
-        emphasis: {
-          label: {
-            show: true,
-          },
-        },
-      },
-    ],
-  };
-
-  myChart_contract.setOption(option);
+  window.addEventListener("resize", myChart_piechart.resize);
 }

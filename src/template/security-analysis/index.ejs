@@ -16,7 +16,7 @@
     <%- include('seperator.ejs',{text: "Select Rule"}) %>
     <div class="rule">
       <div class="rule__list">
-        <% ['incorrect-return', 'Assembly', 'Randomness', 'Delegatecall','DoS',
+        <% ['incorrect-return', 'tx-origin', 'Randomness', 'Delegatecall','DoS',
         'Operations','Ownership','Reentrancy','SelfDestruct'].forEach(
         function(value){ %> <%- include('checkbox', { text: value, value: value
         }) %> <% }); %>
