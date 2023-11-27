@@ -215,7 +215,7 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
                     case "init": {
                       panelProvider.panel.webview.postMessage({
                         type: "init",
-                        payload: { filename },
+                        payload: { files },
                       });
                     }
 
@@ -243,67 +243,109 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
                       break;
                     }
 
-                    case "codeLine": {
-                      const { codeLine, impact } = payload;
+                    case "codeLinechecked": {
+                      const { files, codeLine, impact } = payload;
+
                       const lineParts = codeLine.split(" ");
                       const lineNumber = parseInt(
                         lineParts[lineParts.length - 1]
                       );
 
-                      let decorationType;
-                      let defaultDecorationType;
+                      const decorationTypes: {
+                        [key: string]: vscode.TextEditorDecorationType;
+                      } = {
+                        High: vscode.window.createTextEditorDecorationType({
+                          backgroundColor: "rgba(239, 102, 102, 0.2)",
+                          isWholeLine: true,
+                        }),
+                        Medium: vscode.window.createTextEditorDecorationType({
+                          backgroundColor: "rgba(250, 200, 88, 0.2)",
+                          isWholeLine: true,
+                        }),
+                        Low: vscode.window.createTextEditorDecorationType({
+                          backgroundColor: "rgba(146, 204, 118, 0.2)",
+                          isWholeLine: true,
+                        }),
+                        Info: vscode.window.createTextEditorDecorationType({
+                          backgroundColor: "rgba(84, 112, 198, 0.2)",
+                          isWholeLine: true,
+                        }),
+                        default: vscode.window.createTextEditorDecorationType({
+                          backgroundColor: "rgba(255, 255, 255, 0)",
+                          isWholeLine: true,
+                        }),
+                      };
 
-                      const highSeverityDecorationType =
-                        vscode.window.createTextEditorDecorationType({
-                          backgroundColor: "#ef6666",
-                        });
+                      const decorationType =
+                        decorationTypes[impact] || decorationTypes.default;
 
-                      const mediumSeverityDecorationType =
-                        vscode.window.createTextEditorDecorationType({
-                          backgroundColor: "#fac858",
-                        });
+                      const openedDoc = vscode.workspace.textDocuments.find(
+                        (doc) => doc.fileName === files
+                      );
 
-                      const lowSeverityDecorationType =
-                        vscode.window.createTextEditorDecorationType({
-                          backgroundColor: "#92cc76",
-                        });
+                      if (openedDoc) {
+                        vscode.window
+                          .showTextDocument(openedDoc, {
+                            viewColumn: vscode.ViewColumn.One,
+                            preserveFocus: true,
+                            preview: false,
+                          })
+                          .then((editor) => {
+                            const line = lineNumber - 1;
+                            const startPos = new vscode.Position(line, 0);
+                            const endPos = new vscode.Position(line, 0);
+                            const range = new vscode.Range(startPos, endPos);
 
-                      const infoDecorationType =
-                        vscode.window.createTextEditorDecorationType({
-                          backgroundColor: "#5470c6",
-                        });
+                            const decoration = { range };
+                            const decorations: vscode.DecorationOptions[] = [
+                              decoration,
+                            ];
 
-                      switch (impact) {
-                        case "high":
-                          decorationType = highSeverityDecorationType;
-                          break;
-                        case "medium":
-                          decorationType = mediumSeverityDecorationType;
-                          break;
-                        case "low":
-                          decorationType = lowSeverityDecorationType;
-                          break;
-                        case "info":
-                          decorationType = infoDecorationType;
-                          break;
-                        default:
-                          defaultDecorationType =
-                            vscode.window.createTextEditorDecorationType({
-                              backgroundColor: "#ffffff",
-                            });
-                          decorationType = defaultDecorationType;
-                          break;
+                            editor.setDecorations(decorationType, decorations);
+                            setTimeout(() => {
+                              decorationType.dispose();
+                            }, 3000);
+                          });
+                      } else {
+                        vscode.workspace
+                          .openTextDocument(files)
+                          .then((doc) => {
+                            vscode.window
+                              .showTextDocument(doc, {
+                                viewColumn: vscode.ViewColumn.One,
+                                preserveFocus: true,
+                                preview: false,
+                              })
+                              .then((editor) => {
+                                const line = lineNumber - 1;
+                                const startPos = new vscode.Position(line, 0);
+                                const endPos = new vscode.Position(line, 0);
+                                const range = new vscode.Range(
+                                  startPos,
+                                  endPos
+                                );
+
+                                const decoration = { range };
+                                const decorations: vscode.DecorationOptions[] =
+                                  [decoration];
+
+                                editor.setDecorations(
+                                  decorationType,
+                                  decorations
+                                );
+                                setTimeout(() => {
+                                  decorationType.dispose();
+                                }, 3000);
+                              });
+                          })
+                          .then(undefined, (error) => {
+                            console.error(error);
+                            vscode.window.showErrorMessage(
+                              "An error occurred while opening the file."
+                            );
+                          });
                       }
 
-                      const activeEditor = vscode.window.activeTextEditor;
-
-                      if (activeEditor) {
-                        const range = activeEditor.document.lineAt(
-                          lineNumber - 1
-                        ).range;
-
-                        activeEditor.setDecorations(decorationType, [range]);
-                      }
                       break;
                     }
                   }

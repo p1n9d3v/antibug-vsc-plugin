@@ -6,30 +6,30 @@ $(document).ready(() => {
     type: "init",
   });
 
-  const headerElement = $(".header");
-  headerElement.find("button").click(() => {
-    vscode.postMessage({
-      type: "ExtractAuditReport",
-      payload: {},
-    });
-  });
+
 
   window.addEventListener("message", ({ data: { type, payload } }) => {
     switch (type) {
       case "init": {
+        const { files } = payload;
         initializeUI();
         viewHiddenContent();
         ContractAnalysisTab();
         initializeDetect();
 
-        $(".result__item").on("click", ".result__tr", (event) => {
+        $(".result__item").on("click", "button.codeline", (event) => {
           const clickedElement = $(event.currentTarget);
-          const codeLine = clickedElement.find(".codeline").text().trim();
-          const impact = clickedElement.find(".impact").text().trim();
+          const codeLine = clickedElement
+            .parent()
+            .find(".codeline")
+            .text()
+            .trim();
+          const impact = clickedElement.parent().find(".impact").text().trim();
 
           vscode.postMessage({
-            type: "codeLine",
+            type: "codeLinechecked",
             payload: {
+              files,
               codeLine,
               impact,
             },

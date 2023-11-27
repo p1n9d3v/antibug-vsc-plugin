@@ -320,7 +320,10 @@ body {
   border: 1px;
 }
 
-.codeline {
+.result__item button.codeline {
+  color: black;
+  background-color: white;
+  font-size: 11px;
   cursor: pointer;
 }
 
