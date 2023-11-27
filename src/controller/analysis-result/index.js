@@ -19,8 +19,7 @@ $(document).ready(() => {
         const { files } = payload;
         initializeUI();
         viewHiddenContent();
-        ContractAnalysisTab();
-        initializeDetect();
+        ContractSummaryTab();
 
         $(".result__item").on("click", "button.codeline", (event) => {
           const clickedElement = $(event.currentTarget);
@@ -61,12 +60,14 @@ function initializeUI() {
     select(event);
     $(".korean-content").show();
     $(".english-content").hide();
+    SecuritySummaryTab(".piechart1");
   });
 
   englishButton.click((event) => {
     select(event);
     $(".english-content").show();
     $(".korean-content").hide();
+    SecuritySummaryTab(".piechart2");
   });
 
   koreanButton.trigger("click");
@@ -92,7 +93,7 @@ function viewHiddenContent() {
   });
 }
 
-function ContractAnalysisTab() {
+function ContractSummaryTab() {
   const contractButton = $(".box__content button.menu1");
   const callgraphButton = $(".box__content button.menu2");
   const contractContent = $(".box__content-contract");
@@ -125,8 +126,8 @@ function ContractAnalysisTab() {
   callgraphButton.css("color", "#4e52d0");
 }
 
-function initializeDetect() {
-  const dom = document.querySelector(".piechart");
+function SecuritySummaryTab(selector) {
+  const dom = document.querySelector(selector);
   const myChart_piechart = echarts.init(dom, null, {
     renderer: "canvas",
     useDirtyRect: false,
