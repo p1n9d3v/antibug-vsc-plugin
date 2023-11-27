@@ -221,14 +221,15 @@ export default class SecurityAnalysisViewProvider extends WebviewProvider {
                     }
 
                     case "ExtractAuditReport": {
+                      const { isKoreanSelected, isEnglishSelected } = payload;
                       if (this.auditReportKR && this.auditReportEN) {
                         await this.ExtractAuditReport(
                           this.auditReportKR,
-                          false
+                          isKoreanSelected
                         );
                         await this.ExtractAuditReport(
                           this.auditReportEN,
-                          false
+                          isEnglishSelected
                         );
                       } else {
                         vscode.window

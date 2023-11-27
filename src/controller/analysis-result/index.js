@@ -6,17 +6,13 @@ $(document).ready(() => {
     type: "init",
   });
 
-  $(".extract").click(() => {
-    vscode.postMessage({
-      type: "ExtractAuditReport",
-      payload: {},
-    });
-  });
-
   window.addEventListener("message", ({ data: { type, payload } }) => {
     switch (type) {
       case "init": {
         const { files } = payload;
+        const isKoreanSelected = true;
+        const isEnglishSelected = false;
+
         initializeUI();
         viewHiddenContent();
         ContractSummaryTab();
@@ -36,6 +32,16 @@ $(document).ready(() => {
               files,
               codeLine,
               impact,
+            },
+          });
+        });
+
+        $(".extract").click(() => {
+          vscode.postMessage({
+            type: "ExtractAuditReport",
+            payload: {
+              isKoreanSelected,
+              isEnglishSelected,
             },
           });
         });
@@ -61,6 +67,8 @@ function initializeUI() {
     $(".korean-content").show();
     $(".english-content").hide();
     SecuritySummaryTab(".piechart1");
+    isKoreanSelected = true;
+    isEnglishSelected = false;
   });
 
   englishButton.click((event) => {
@@ -68,6 +76,8 @@ function initializeUI() {
     $(".english-content").show();
     $(".korean-content").hide();
     SecuritySummaryTab(".piechart2");
+    isKoreanSelected = false;
+    isEnglishSelected = true;
   });
 
   koreanButton.trigger("click");
