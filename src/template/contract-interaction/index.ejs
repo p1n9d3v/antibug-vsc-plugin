@@ -9,8 +9,23 @@
 
     <div class="contract__address"></div>
     <div class="contract__balance"></div>
-    <%- include('seperator.ejs',{text: "Functions"}) %>
 
+    <%- include('seperator.ejs',{text: "Storage"}) %>
+    <div class="contract__storage">
+      <table>
+        <thead>
+          <tr>
+            <th>Key</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('seperator.ejs',{text: "Functions"}) %>
     <div class="functions"></div>
 
     <%- include('seperator.ejs',{text: "Results"}) %>

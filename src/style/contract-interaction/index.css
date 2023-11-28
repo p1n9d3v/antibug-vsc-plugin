@@ -72,3 +72,24 @@ body {
 .receipt__error {
   word-break: break-word;
 }
+
+/* Table */
+.contract__storage {
+  width: 100%;
+}
+.contract__storage table {
+  border-collapse: collapse;
+  width: 98%;
+  margin: 20px auto;
+  table-layout: fixed;
+}
+
+th,
+td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

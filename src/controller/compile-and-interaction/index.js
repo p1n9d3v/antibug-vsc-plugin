@@ -36,7 +36,7 @@ $(".interaction__from-list select").change((event) => {
   const address = optionElement.text().split("(")[0];
   const balance = optionElement.text().split("(")[1].split(")")[0];
 
-  const selectedAccount = {
+  selectedAccount = {
     address,
     privateKey,
     balance,
@@ -106,13 +106,11 @@ $(".deploy__contracts select").change((event) => {
 });
 
 $(".deploy__info-abi").click(() => {
-  const { selectedContract } = vscode.getState();
   if (!selectedContract) return;
   navigator.clipboard.writeText(JSON.stringify(selectedContract.abis));
 });
 
 $(".deploy__info-bytecodes").click(() => {
-  const { selectedContract } = vscode.getState();
   if (!selectedContract) return;
   navigator.clipboard.writeText(selectedContract.bytecodes);
 });
@@ -148,18 +146,18 @@ window.addEventListener("message", ({ data: { type, payload } }) => {
         $(".compile__files select").append(optionElement);
       });
 
-      changeAccountState(accounts, {
+      selectedAccount = {
         address: accounts[0].address,
         privateKey: accounts[0].privateKey,
         balance: accounts[0].balance,
-      });
+      };
+      changeAccountState(accounts, selectedAccount);
 
       break;
     }
     case "changeAccountState": {
       const { accounts } = payload;
 
-      const { selectedAccount } = vscode.getState();
       changeAccountState(accounts, selectedAccount);
 
       break;

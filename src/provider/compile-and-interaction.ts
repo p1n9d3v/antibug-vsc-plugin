@@ -247,6 +247,7 @@ export default class CompileAndInteractionViewProvider extends WebviewProvider {
             this.contractPanel = new ContractInteractionWebviewPanelProvider({
               extensionUri: this.extensionUri,
               node: this.node,
+              primarySidebarWebview: webviewView,
               viewType: "antiblock.contract-interaction",
               title: contract.name,
               column: vscode.ViewColumn.Beside,

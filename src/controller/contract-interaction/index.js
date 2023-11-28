@@ -100,7 +100,7 @@ const oldState = vscode.getState();
       case "changeContractBalance": {
         const { balance } = payload;
 
-        $(".contract__balance").text(balance);
+        $(".contract__balance").text(`Balance: ${balance}`);
         break;
       }
 
@@ -115,6 +115,23 @@ const oldState = vscode.getState();
         $(".receipts").append(receiptElement);
 
         break;
+      }
+
+      case "changeStorage": {
+        const { storage } = payload;
+        const parsedStorage = JSON.parse(storage);
+        const storageElement = $(".contract__storage tbody");
+        storageElement.empty();
+
+        Object.keys(parsedStorage).forEach((key) => {
+          const value = parsedStorage[key];
+          storageElement.append(`
+            <tr>
+              <td>${key}</td>
+              <td>${"0x".concat(value.slice(2))}</td>
+            </tr>
+          `);
+        });
       }
     }
   });

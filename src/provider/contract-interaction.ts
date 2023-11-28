@@ -6,7 +6,7 @@ import AntiBlockNode from "../blockchain/node";
 import { changeAccountState, convertBalanceByType, postMessage } from "../util";
 import { Interface } from "ethers/lib/utils";
 import { RunTxResult } from "@ethereumjs/vm";
-import { bigIntToHex, bytesToHex } from "@ethereumjs/util";
+import { Address, bigIntToHex, bytesToHex, hexToBytes } from "@ethereumjs/util";
 
 type State = {
   account: {
@@ -21,7 +21,10 @@ type State = {
     abis: string;
     balance: string;
   };
-  value: string;
+  value: {
+    amount: string;
+    type: string;
+  };
 };
 
 export default class ContractInteractionWebviewPanelProvider extends WebviewPanelProvider {
@@ -32,11 +35,13 @@ export default class ContractInteractionWebviewPanelProvider extends WebviewPane
     extensionUri,
     node,
     viewType,
+    primarySidebarWebview,
     title,
     column = vscode.ViewColumn.Beside,
   }: {
     extensionUri: vscode.Uri;
     node: AntiBlockNode;
+    primarySidebarWebview: vscode.WebviewView;
     viewType: string;
     title: string;
     column: vscode.ViewColumn;
@@ -47,6 +52,7 @@ export default class ContractInteractionWebviewPanelProvider extends WebviewPane
       title,
       column,
     });
+    this.primarySidebarWebview = primarySidebarWebview;
     this.node = node;
   }
 
@@ -127,11 +133,6 @@ export default class ContractInteractionWebviewPanelProvider extends WebviewPane
               balance,
             });
 
-            const accounts = await changeAccountState(this.node);
-            postMessage(this.panel.webview, "changeAccountState", {
-              accounts,
-            });
-
             // how to show data bottom panel
 
             postMessage(this.panel.webview, "transactionResult", {
@@ -152,73 +153,92 @@ export default class ContractInteractionWebviewPanelProvider extends WebviewPane
           }
           break;
         }
-        // case "call": {
-        //   // const { functionName, arguments: args } = payload;
-        //   const { contract, args } = payload;
-        //   const iface = new Interface(contract.abi);
+        case "send": {
+          const { functionName, args } = payload;
+          const contract = this.state.contract;
+          const currentAccount = this.state.account;
+          const iface = new Interface(contract.abis);
 
-        //   const callData = iface.encodeFunctionData(functionName, args);
-        //   const tx = this.node.makeFeeMarketEIP1559Transaction({
-        //     to: contract.address,
-        //     value: "0x0",
-        //     data: callData,
-        //   });
+          const callData = iface.encodeFunctionData(functionName, args);
 
-        //   const tx = FeeMarketEIP1559Transaction.fromTxData(txData).sign(
-        //     hexToBytes(this.currentAccount.privateKey)
-        //   );
+          const value = convertBalanceByType(
+            this.state.value.amount,
+            this.state.value.type
+          );
+          const tx = await this.node.makeFeeMarketEIP1559Transaction({
+            to: contract.address,
+            value: bigIntToHex(BigInt(value)),
+            callData,
+            privateKey: currentAccount.privateKey,
+          });
 
-        //   try {
-        //     const receipt = await this.node.runTx({ tx });
+          try {
+            const { receipt } = await this.node.mine(tx);
 
-        //     const {
-        //       amountSpent,
-        //       totalSpent,
-        //       from,
-        //       to,
-        //       executedGasUsed,
-        //       input,
-        //       output,
-        //     } = this.parseReceipt(receipt, iface, functionName);
+            const {
+              amountSpent,
+              totalSpent,
+              from,
+              to,
+              executedGasUsed,
+              input,
+              output,
+            } = this.parseReceipt(receipt, iface, functionName);
+            const txHash = bytesToHex(tx.hash());
 
-        //     const txHash = bytesToHex(tx.hash());
+            const balance = (
+              await this.node.getBalance(contract.address)
+            ).toString();
+            postMessage(this.panel.webview, "changeContractBalance", {
+              balance,
+            });
 
-        //     const balance = (
-        //       await this.node.getBalance(contractAddress)
-        //     ).toString();
-        //     panelProvider.panel.webview.postMessage({
-        //       type: "changeContractBalance",
-        //       payload: {
-        //         balance,
-        //       },
-        //     });
+            const accounts = await changeAccountState(this.node);
+            postMessage(
+              this.primarySidebarWebview.webview,
+              "changeAccountState",
+              {
+                accounts,
+              }
+            );
 
-        //     await this.changeAccountState();
+            const storage =
+              await receipt.execResult.runState?.stateManager?.dumpStorage(
+                Address.fromString(contract.address)
+              );
+            postMessage(this.panel.webview, "changeStorage", {
+              storage: JSON.stringify(storage),
+            });
 
-        //     panelProvider.panel.webview.postMessage({
-        //       type: "transactionResult",
-        //       payload: {
-        //         txHash,
-        //         amountSpent,
-        //         totalSpent,
-        //         from,
-        //         to,
-        //         executedGasUsed,
-        //         input,
-        //         output,
-        //       },
-        //     });
-        //   } catch (e: any) {
-        //     panelProvider.panel.webview.postMessage({
-        //       type: "transactionResult",
-        //       payload: {
-        //         txHash: "Error",
-        //         error: e.message,
-        //       },
-        //     });
-        //   }
-        //   break;
-        // }
+            postMessage(this.primarySidebarWebview.webview, "changeValue", {
+              value: "0",
+            });
+
+            this.setState({
+              value: {
+                amount: "0",
+                type: "eth",
+              },
+            });
+
+            postMessage(this.panel.webview, "transactionResult", {
+              txHash,
+              amountSpent,
+              totalSpent,
+              from,
+              to,
+              executedGasUsed,
+              input,
+              output,
+            });
+          } catch (e: any) {
+            postMessage(this.panel.webview, "transactionResult", {
+              txHash: "Error",
+              error: e.message,
+            });
+          }
+          break;
+        }
       }
     });
   }
@@ -261,267 +281,4 @@ export default class ContractInteractionWebviewPanelProvider extends WebviewPane
       output,
     };
   }
-  //       case "send": {
-  //         //     const { functionName, arguments: args } = payload;
-  //         //     const latestBlock = this.node.getLatestBlock();
-  //         //     const estimatedGasLimit = this.node.getEstimatedGasLimit(latestBlock);
-  //         //     const baseFee = latestBlock.header.calcNextBaseFee();
-  //         //     const callData = iface.encodeFunctionData(functionName, [...args]);
-  //         //     const txData = {
-  //         //       to: contractAddress,
-  //         //       value: bigIntToHex(BigInt(this.value)),
-  //         //       maxFeePerGas: baseFee,
-  //         //       gasLimit: bigIntToHex(BigInt(estimatedGasLimit)),
-  //         //       nonce: await this.node.getNonce(this.currentAccount.privateKey),
-  //         //       data: callData,
-  //         //     };
-  //         //     const tx = FeeMarketEIP1559Transaction.fromTxData(txData).sign(
-  //         //       hexToBytes(this.currentAccount.privateKey)
-  //         //     );
-  //         //     try {
-  //         //       const { receipt } = await this.node.mine(tx);
-  //         //       const {
-  //         //         amountSpent,
-  //         //         totalSpent,
-  //         //         from,
-  //         //         to,
-  //         //         executedGasUsed,
-  //         //         input,
-  //         //         output,
-  //         //       } = this.parseReceipt(receipt, iface, functionName);
-  //         //       const txHash = bytesToHex(tx.hash());
-  //         //       const balance = (
-  //         //         await this.node.getBalance(contractAddress)
-  //         //       ).toString();
-  //         //       panelProvider.panel.webview.postMessage({
-  //         //         type: "changeContractBalance",
-  //         //         payload: {
-  //         //           balance,
-  //         //         },
-  //         //       });
-  //         //       console.log("receipt", receipt);
-  //         //       const test =
-  //         //         (await receipt.execResult.runState?.stateManager.dumpStorage(
-  //         //           new Address(hexToBytes(contractAddress))
-  //         //         )) as any;
-  //         //       console.log(
-  //         //         "rlp",
-  //         //         Object.values(test).map((v: any) => RLP.decode(v))
-  //         //       );
-  //         //       console.log(
-  //         //         "1",
-  //         //         await receipt.execResult.runState?.stateManager.getContractStorage(
-  //         //           new Address(hexToBytes(contractAddress)),
-  //         //           hexToBytes("0x0")
-  //         //         )
-  //         //       );
-  //         //       console.log(
-  //         //         "2",
-  //         //         await receipt.execResult.runState?.stateManager.getContractStorage(
-  //         //           new Address(hexToBytes(contractAddress)),
-  //         //           hexToBytes("0x1")
-  //         //         )
-  //         //       );
-  //         //       await this.changeAccountState();
-  //         //       panelProvider.panel.webview.postMessage({
-  //         //         type: "transactionResult",
-  //         //         payload: {
-  //         //           txHash,
-  //         //           amountSpent,
-  //         //           totalSpent,
-  //         //           from,
-  //         //           to,
-  //         //           executedGasUsed,
-  //         //           input,
-  //         //           output,
-  //         //         },
-  //         //       });
-  //         //     } catch (e: any) {
-  //         //       panelProvider.panel.webview.postMessage({
-  //         //         type: "transactionResult",
-  //         //         payload: {
-  //         //           txHash: "Error",
-  //         //           error: e.message,
-  //         //         },
-  //         //       });
-  //         //     }
-  //         //     // get Text from result
-  //         //     break;
-  //         //   }
-  //       }
-  //     }
-  //   });
-
-  //   case "send": {
-  //     const { functionName, arguments: args } = payload;
-
-  //     const latestBlock = this.node.getLatestBlock();
-  //     const estimatedGasLimit = this.node.getEstimatedGasLimit(latestBlock);
-  //     const baseFee = latestBlock.header.calcNextBaseFee();
-
-  //     const callData = iface.encodeFunctionData(functionName, [...args]);
-
-  //     const txData = {
-  //       to: contractAddress,
-  //       value: bigIntToHex(BigInt(this.value)),
-  //       maxFeePerGas: baseFee,
-  //       gasLimit: bigIntToHex(BigInt(estimatedGasLimit)),
-  //       nonce: await this.node.getNonce(this.currentAccount.privateKey),
-  //       data: callData,
-  //     };
-
-  //     const tx = FeeMarketEIP1559Transaction.fromTxData(txData).sign(
-  //       hexToBytes(this.currentAccount.privateKey)
-  //     );
-
-  //     try {
-  //       const { receipt } = await this.node.mine(tx);
-
-  //       const {
-  //         amountSpent,
-  //         totalSpent,
-  //         from,
-  //         to,
-  //         executedGasUsed,
-  //         input,
-  //         output,
-  //       } = this.parseReceipt(receipt, iface, functionName);
-  //       const txHash = bytesToHex(tx.hash());
-
-  //       const balance = (
-  //         await this.node.getBalance(contractAddress)
-  //       ).toString();
-  //       panelProvider.panel.webview.postMessage({
-  //         type: "changeContractBalance",
-  //         payload: {
-  //           balance,
-  //         },
-  //       });
-
-  //       console.log("receipt", receipt);
-  //       const test =
-  //         (await receipt.execResult.runState?.stateManager.dumpStorage(
-  //           new Address(hexToBytes(contractAddress))
-  //         )) as any;
-  //       console.log(
-  //         "rlp",
-  //         Object.values(test).map((v: any) => RLP.decode(v))
-  //       );
-
-  //       console.log(
-  //         "1",
-  //         await receipt.execResult.runState?.stateManager.getContractStorage(
-  //           new Address(hexToBytes(contractAddress)),
-  //           hexToBytes("0x0")
-  //         )
-  //       );
-
-  //       console.log(
-  //         "2",
-  //         await receipt.execResult.runState?.stateManager.getContractStorage(
-  //           new Address(hexToBytes(contractAddress)),
-  //           hexToBytes("0x1")
-  //         )
-  //       );
-
-  //       await this.changeAccountState();
-
-  //       panelProvider.panel.webview.postMessage({
-  //         type: "transactionResult",
-  //         payload: {
-  //           txHash,
-  //           amountSpent,
-  //           totalSpent,
-  //           from,
-  //           to,
-  //           executedGasUsed,
-  //           input,
-  //           output,
-  //         },
-  //       });
-  //     } catch (e: any) {
-  //       panelProvider.panel.webview.postMessage({
-  //         type: "transactionResult",
-  //         payload: {
-  //           txHash: "Error",
-  //           error: e.message,
-  //         },
-  //       });
-  //     }
-  //     // get Text from result
-  //     break;
-  //   }
-  //   case "call": {
-  //     const { functionName, arguments: args } = payload;
-  //     const latestBlock = this.node.getLatestBlock();
-  //     const estimatedGasLimit = this.node.getEstimatedGasLimit(latestBlock);
-  //     const baseFee = latestBlock.header.calcNextBaseFee();
-
-  //     const callData = iface.encodeFunctionData(functionName, args);
-  //     const txData = {
-  //       to: contractAddress,
-  //       value: bigIntToHex(0n),
-  //       maxFeePerGas: baseFee,
-  //       gasLimit: bigIntToHex(BigInt(estimatedGasLimit)),
-  //       nonce: await this.node.getNonce(this.currentAccount.privateKey),
-  //       data: callData,
-  //     };
-
-  //     const tx = FeeMarketEIP1559Transaction.fromTxData(txData).sign(
-  //       hexToBytes(this.currentAccount.privateKey)
-  //     );
-
-  //     try {
-  //       const receipt = await this.node.runTx({ tx });
-
-  //       const {
-  //         amountSpent,
-  //         totalSpent,
-  //         from,
-  //         to,
-  //         executedGasUsed,
-  //         input,
-  //         output,
-  //       } = this.parseReceipt(receipt, iface, functionName);
-
-  //       const txHash = bytesToHex(tx.hash());
-
-  //       const balance = (
-  //         await this.node.getBalance(contractAddress)
-  //       ).toString();
-  //       panelProvider.panel.webview.postMessage({
-  //         type: "changeContractBalance",
-  //         payload: {
-  //           balance,
-  //         },
-  //       });
-
-  //       await this.changeAccountState();
-
-  //       panelProvider.panel.webview.postMessage({
-  //         type: "transactionResult",
-  //         payload: {
-  //           txHash,
-  //           amountSpent,
-  //           totalSpent,
-  //           from,
-  //           to,
-  //           executedGasUsed,
-  //           input,
-  //           output,
-  //         },
-  //       });
-  //     } catch (e: any) {
-  //       panelProvider.panel.webview.postMessage({
-  //         type: "transactionResult",
-  //         payload: {
-  //           txHash: "Error",
-  //           error: e.message,
-  //         },
-  //       });
-  //     }
-  //     break;
-  //   }
-  // }
-  // }
 }
