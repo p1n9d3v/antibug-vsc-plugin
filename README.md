@@ -1,71 +1,32 @@
-# antiblock README
+<p align="middle" >
+<img width="100%" alt="Screenshot 2024-12-22 at 10 25 52 PM" src="https://github.com/user-attachments/assets/eb8a3161-ed64-4af4-9ee3-996d99b4b745" />
+</p>
 
-This is the README for your extension "antiblock". After writing up a brief description, we recommend including the following sections.
+# Antibug
 
-## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+커스터마이징한 Slither를 사용하여 Contract 정적 분석 및 보고서 생성, 자체 로컬 체인을 이용하여 시뮬레이션 및 테스트가 가능한 Visual Studio Extension
 
-For example if there is an image subfolder under your extension project workspace:
+## 기술
+- Visual Studio Extension
+- Ethereum JS
+- Jquery
+- EJS
+- ethers.js
+- Slither
 
-\!\[feature X\]\(images/feature-x.png\)
+## 발표 자료
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+[[Antibug] Final Demoday.pdf](https://github.com/user-attachments/files/18221999/Antibug.Final.Demoday.pdf)
 
-## Requirements
+## 시연
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+https://github.com/user-attachments/assets/6dfd8dc0-a2a5-42ae-af19-a8d368a427a2
 
-## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+https://github.com/user-attachments/assets/05efa5f7-44e9-44f7-87b3-a94836d690d3
 
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+## 프로토콜 캠프 5기 최우수상
+<p align="middle">
+  <img width="100%" alt="1st" src="https://github.com/user-attachments/assets/746eb685-6653-42dd-b50e-4871341be00d" />
+</p>
